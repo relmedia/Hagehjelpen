@@ -18,7 +18,7 @@ const MORE_NAV = [
   { href: "#huskeliste", label: "Huskeliste" },
   { href: "#omtaler", label: "Kundeomtaler" },
   { href: "#faq", label: "Spørsmål og svar" },
-  { href: "#befaring", label: "Book befaring" },
+  { href: "#befaring", label: "Bestill befaring" },
 ] as const;
 
 const MOBILE_NAV = [

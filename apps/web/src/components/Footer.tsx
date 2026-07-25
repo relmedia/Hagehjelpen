@@ -66,7 +66,7 @@ export function Footer() {
             </li>
             <li>
               <a href="#befaring" className="transition-colors hover:text-leaf-300">
-                Book befaring
+                Bestill befaring
               </a>
             </li>
             <li>

@@ -4,6 +4,9 @@ import { useRef, useState } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { lawnSizeFromArea, sendContactPrefill } from "@/lib/contact-prefill";
 import { CoverageCheck } from "./CoverageCheck";
+import { LawnMeasure, type MeasureResult } from "./LawnMeasure";
+import { AddressSearch } from "./AddressSearch";
+import { estimateDrivingKm } from "@/lib/geonorge";
 
 const TIERS = [
   { max: 1000, price: 4000, label: "0–1000 m²" },
@@ -11,6 +14,8 @@ const TIERS = [
   { max: Number.POSITIVE_INFINITY, price: 9250, label: "2000 m² og oppover" },
 ] as const;
 
+const MAX_AREA = 5000;
+const MAX_DISTANCE = 80;
 const FREE_ISLANDS = 2;
 const ISLAND_PRICE = 250;
 const FREE_KM = 15;
@@ -72,6 +77,14 @@ export function LawnCalculator() {
   const exVat = tier.price + islandCost + drivingCost;
   const incVat = exVat * (1 + VAT_RATE);
 
+  /** Fant brukeren adressen sin i kartet, kjenner vi også avstanden. */
+  function handleMeasured({ area: measured, distanceKm }: MeasureResult) {
+    setArea(measured);
+    if (distanceKm !== undefined) {
+      setDistance(Math.min(distanceKm, MAX_DISTANCE));
+    }
+  }
+
   function handleSendToForm() {
     sendContactPrefill({
       service: "installasjon",
@@ -117,7 +130,7 @@ export function LawnCalculator() {
                   id="calc-area"
                   type="range"
                   min={100}
-                  max={4000}
+                  max={MAX_AREA}
                   step={50}
                   value={area}
                   onChange={(e) => setArea(Number(e.target.value))}
@@ -125,8 +138,10 @@ export function LawnCalculator() {
                 />
                 <div className="mt-2 flex justify-between text-xs text-ink-soft/70">
                   <span>100 m²</span>
-                  <span>4000 m²</span>
+                  <span>{kr(MAX_AREA)} m²</span>
                 </div>
+
+                <LawnMeasure onApply={handleMeasured} maxArea={MAX_AREA} />
               </div>
 
               <div>
@@ -166,11 +181,28 @@ export function LawnCalculator() {
                   id="calc-distance"
                   type="range"
                   min={0}
-                  max={80}
+                  max={MAX_DISTANCE}
                   step={1}
                   value={distance}
                   onChange={(e) => setDistance(Number(e.target.value))}
                   className={`mt-4 ${sliderClass}`}
+                />
+                <AddressSearch
+                  id="calc-address"
+                  placeholder="Eller søk opp adressen din"
+                  ariaLabel="Søk opp adressen din for å beregne avstanden"
+                  className="mt-3"
+                  onSelect={(address) =>
+                    setDistance(
+                      Math.min(
+                        estimateDrivingKm(
+                          address.representasjonspunkt.lat,
+                          address.representasjonspunkt.lon,
+                        ),
+                        MAX_DISTANCE,
+                      ),
+                    )
+                  }
                 />
                 <p className="mt-2 text-xs text-ink-soft/70">
                   De første 15 kilometerne er inkludert.

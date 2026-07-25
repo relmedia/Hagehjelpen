@@ -62,7 +62,7 @@ export function Booking() {
             Befaring
           </p>
           <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-ink sm:text-4xl">
-            Book en gratis befaring
+            Bestill en gratis befaring
           </h2>
           <p className="mt-4 text-ink-soft">
             Vi kommer hjem til deg, ser på hagen og gir deg et uforpliktende
@@ -96,7 +96,7 @@ export function Booking() {
             <div className="overflow-hidden rounded-3xl border border-leaf-100 bg-white shadow-xl shadow-leaf-900/5">
               <iframe
                 src={`https://cal.com/${CAL_LINK}?embed=true&layout=month_view&theme=light`}
-                title="Book befaring med Hagehjelpen"
+                title="Bestill befaring med Hagehjelpen"
                 loading="lazy"
                 className="h-[680px] w-full border-0"
               />
