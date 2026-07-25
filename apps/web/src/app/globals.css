@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  /* Grønnskala hentet fra logoen (lys lime -> dyp gressgrønn) */
+  --color-leaf-50: #f3fbe9;
+  --color-leaf-100: #e4f6cf;
+  --color-leaf-200: #c9eda5;
+  --color-leaf-300: #a6df70;
+  --color-leaf-400: #84cf45;
+  --color-leaf-500: #65b427;
+  --color-leaf-600: #4c901c;
+  --color-leaf-700: #3b6e1a;
+  --color-leaf-800: #32581b;
+  --color-leaf-900: #2b4b1b;
+  --color-leaf-950: #132a0a;
+
+  /* Kull/sort fra logoen og en varm off-white */
+  --color-ink: #20261c;
+  --color-ink-soft: #47503f;
+  --color-cream: #f7f9f2;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-leaf-400);
+  color: var(--color-ink);
+}
+
+/* Elementer som GSAP animerer inn – skjules før JS kjører kun når JS finnes,
+   slik at siden fortsatt er lesbar uten JavaScript. */
+.gsap-reveal {
+  opacity: 1;
+}
+
+html.js .gsap-reveal {
+  opacity: 0;
+}
