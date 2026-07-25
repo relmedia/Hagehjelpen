@@ -35,8 +35,38 @@ export function Footer() {
               </a>
             </li>
             <li>
+              <a href="#installasjon" className="transition-colors hover:text-leaf-300">
+                Installasjon og priser
+              </a>
+            </li>
+            <li>
+              <a href="#kalkulator" className="transition-colors hover:text-leaf-300">
+                Prisberegner
+              </a>
+            </li>
+            <li>
+              <a href="#velg-klipper" className="transition-colors hover:text-leaf-300">
+                Velg riktig klipper
+              </a>
+            </li>
+            <li>
               <a href="#huskeliste" className="transition-colors hover:text-leaf-300">
                 Huskeliste før montering
+              </a>
+            </li>
+            <li>
+              <a href="#feilsoking" className="transition-colors hover:text-leaf-300">
+                Feilsøking
+              </a>
+            </li>
+            <li>
+              <a href="#faq" className="transition-colors hover:text-leaf-300">
+                Spørsmål og svar
+              </a>
+            </li>
+            <li>
+              <a href="#befaring" className="transition-colors hover:text-leaf-300">
+                Book befaring
               </a>
             </li>
             <li>
@@ -59,11 +89,20 @@ export function Footer() {
               </a>
             </li>
             <li>
-              <a href="tel:+4700000000" className="transition-colors hover:text-leaf-300">
-                +47 00 00 00 00
+              <a href="tel:+47 414 46 371" className="transition-colors hover:text-leaf-300">
+               +47 414 46 371
               </a>
             </li>
-            <li>Norge</li>
+            <li>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=%C3%98lbergvegen%20101%2C%204053%20R%C3%A6ge"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-leaf-300"
+              >
+                Ølbergvegen 101, 4053 Ræge
+              </a>
+            </li>
           </ul>
         </div>
       </div>

@@ -1,27 +1,40 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollTrigger, useGSAP } from "@/lib/gsap";
 
-const NAV_LINKS = [
+const PRIMARY_NAV = [
+  { href: "#installasjon", label: "Installasjon" },
+  { href: "#kalkulator", label: "Prisberegner" },
+  { href: "#feilsoking", label: "Feilsøking" },
+  { href: "#kontakt", label: "Kontakt" },
+] as const;
+
+const MORE_NAV = [
   { href: "#fordeler", label: "Fordeler" },
   { href: "#slik-fungerer-det", label: "Slik fungerer det" },
+  { href: "#velg-klipper", label: "Velg klipper" },
   { href: "#huskeliste", label: "Huskeliste" },
-  { href: "#kontakt", label: "Kontakt" },
-];
+  { href: "#omtaler", label: "Kundeomtaler" },
+  { href: "#faq", label: "Spørsmål og svar" },
+  { href: "#befaring", label: "Book befaring" },
+] as const;
+
+const MOBILE_NAV = [
+  ...PRIMARY_NAV,
+  ...MORE_NAV,
+] as const;
 
 export function Header() {
   const headerRef = useRef<HTMLElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useGSAP(
     () => {
-      // Hvit bakgrunn og mørk tekst fra det øyeblikket hero-pinningen slipper –
-      // altså når klipperen er framme til høyre og siden begynner å rulle videre.
-      // Vi bytter kun på start-grensa, slik at pillen blir stående hele veien
-      // ned til footeren i stedet for å falle av når trigger-området tar slutt.
       ScrollTrigger.create({
         start: () => ScrollTrigger.getById("hero-pin")?.end ?? window.innerHeight,
         invalidateOnRefresh: true,
@@ -33,6 +46,21 @@ export function Header() {
     { scope: headerRef },
   );
 
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setMoreOpen(false);
+    }
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [moreOpen]);
+
+  const linkClass = scrolled
+    ? "text-ink-soft hover:text-leaf-600"
+    : "text-white/90 hover:text-leaf-300";
+
   return (
     <header
       ref={headerRef}
@@ -41,7 +69,7 @@ export function Header() {
       }`}
     >
       <div
-        className={`mx-auto overflow-hidden transition-all duration-300 ${
+        className={`mx-auto transition-all duration-300 ${
           scrolled || menuOpen
             ? "max-w-6xl rounded-2xl bg-white/90 shadow-[0_8px_30px_rgba(19,42,10,0.10)] backdrop-blur-md"
             : "max-w-6xl rounded-none bg-transparent"
@@ -55,13 +83,12 @@ export function Header() {
           <a
             href="#"
             onClick={(event) => {
-              // Egen håndtering i stedet for #-navigasjon, så vi slipper å legge
-              // igjen en tom hash i URL-en
               event.preventDefault();
               setMenuOpen(false);
+              setMoreOpen(false);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="flex items-center gap-3"
+            className="flex shrink-0 items-center gap-3"
             aria-label="Til toppen"
           >
             <Image
@@ -70,9 +97,7 @@ export function Header() {
               width={205}
               height={108}
               priority
-              className={`w-auto transition-all duration-300 ${
-                scrolled || menuOpen ? "h-14" : "h-14"
-              }`}
+              className="h-14 w-auto transition-all duration-300"
             />
             <span
               style={{ fontFamily: "var(--font-logo)", transform: "skewX(-10deg)" }}
@@ -98,23 +123,73 @@ export function Header() {
             </span>
           </a>
 
-          <nav className="hidden items-center gap-8 md:flex" aria-label="Hovedmeny">
-            {NAV_LINKS.map((link) => (
+          <nav
+            className="hidden items-center gap-4 lg:gap-5 md:flex"
+            aria-label="Hovedmeny"
+          >
+            {PRIMARY_NAV.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors ${
-                  scrolled
-                    ? "text-ink-soft hover:text-leaf-600"
-                    : "text-white/90 hover:text-leaf-300"
-                }`}
+                className={`whitespace-nowrap text-sm font-medium transition-colors ${linkClass}`}
               >
                 {link.label}
               </a>
             ))}
+
+            <div
+              ref={moreRef}
+              className="relative"
+              onMouseEnter={() => setMoreOpen(true)}
+              onMouseLeave={() => setMoreOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setMoreOpen((open) => !open)}
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+                className={`inline-flex items-center gap-1 whitespace-nowrap text-sm font-medium transition-colors ${linkClass}`}
+              >
+                Mer
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className={`transition-transform ${moreOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                >
+                  <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+
+              {moreOpen && (
+                <div className="absolute right-0 top-full z-50 pt-2">
+                  <div
+                    role="menu"
+                    className="min-w-48 rounded-xl border border-leaf-100 bg-white py-1.5 shadow-lg shadow-leaf-900/10"
+                  >
+                    {MORE_NAV.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        role="menuitem"
+                        onClick={() => setMoreOpen(false)}
+                        className="block px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-leaf-50 hover:text-leaf-700"
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <a
               href="#kontakt"
-              className="rounded-full bg-leaf-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-leaf-500/30 transition-all hover:bg-leaf-600 hover:shadow-leaf-600/30"
+              className="ml-1 whitespace-nowrap rounded-full bg-leaf-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-leaf-500/30 transition-all hover:bg-leaf-600 hover:shadow-leaf-600/30"
             >
               Få et tilbud
             </a>
@@ -123,7 +198,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors md:hidden ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors md:hidden ${
               scrolled || menuOpen ? "text-ink" : "text-white"
             }`}
             aria-expanded={menuOpen}
@@ -147,7 +222,7 @@ export function Header() {
               )}
             </svg>
           </button>
-      </div>
+        </div>
 
         {menuOpen && (
           <nav
@@ -155,7 +230,7 @@ export function Header() {
             aria-label="Mobilmeny"
           >
             <ul className="flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
+              {MOBILE_NAV.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
