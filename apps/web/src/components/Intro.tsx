@@ -102,7 +102,7 @@ export function Intro() {
 
         <div className="intro-card gsap-reveal relative overflow-hidden rounded-3xl bg-leaf-950 shadow-2xl shadow-leaf-900/25">
           <Image
-            src="/hage-installasjon.jpg"
+            src="/hage-installasjon.png"
             alt="Ferdig installert robotgressklipper som klipper plenen i en hage"
             fill
             sizes="(max-width: 1024px) 100vw, 528px"
