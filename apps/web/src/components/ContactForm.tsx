@@ -16,6 +16,7 @@ import {
 
 const SERVICES = [
   { value: "installasjon", label: "Installasjon" },
+  { value: "befaring", label: "Befaring" },
   { value: "feilsoking", label: "Feilsøking" },
   { value: "usikker", label: "Usikker" },
 ] as const;
@@ -60,13 +61,30 @@ const INITIAL: FormState = {
   message: "",
 };
 
+/** Feltene bruker flytende etiketter: eksempelteksten er usynlig til feltet får
+ *  fokus, slik at etiketten kan ligge midt i feltet så lenge det er tomt. */
 const inputClass =
-  "w-full rounded-xl border border-leaf-100 bg-white px-4 py-3 text-sm text-ink outline-none transition-shadow placeholder:text-ink-soft/50 focus:border-leaf-400 focus:ring-2 focus:ring-leaf-400/20";
+  "peer w-full rounded-xl border border-leaf-100 bg-white px-4 pb-2 pt-6 text-sm text-ink outline-none transition-shadow placeholder:text-transparent focus:border-leaf-400 focus:ring-2 focus:ring-leaf-400/20 focus:placeholder:text-ink-soft/40";
+
+const floatLabelClass =
+  "pointer-events-none absolute left-4 top-2 text-xs font-medium text-ink-soft/70 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-leaf-700";
+
+const floatLabelBlockClass =
+  "pointer-events-none absolute left-4 top-2 text-xs font-medium text-ink-soft/70 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-leaf-700";
+
+/** Radix-triggeren har ingen placeholder å reagere på, så etiketten på
+ *  nedtrekkene ligger permanent i toppen av feltet. */
+const staticLabelClass =
+  "pointer-events-none absolute left-4 top-2 z-10 text-xs font-medium text-ink-soft/70";
 
 const labelClass = "mb-1.5 block text-sm font-medium text-ink";
 
 function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function Optional() {
+  return <span className="font-normal text-ink-soft/70">(valgfritt)</span>;
 }
 
 export function ContactForm() {
@@ -78,6 +96,9 @@ export function ContactForm() {
   );
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Skal vi bare på befaring, finner vi ut av plen og modell når vi er der.
+  const detailsRequired = form.service !== "befaring";
 
   useEffect(() => {
     function applyPrefill() {
@@ -147,7 +168,7 @@ export function ContactForm() {
     setStatus("loading");
     setError("");
 
-    if (!form.phone.trim() || !form.lawnSize || !form.mower) {
+    if (!form.phone.trim() || (detailsRequired && (!form.lawnSize || !form.mower))) {
       setError("Fyll ut alle obligatoriske felt.");
       setStatus("error");
       return;
@@ -219,10 +240,7 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="contact-name" className={labelClass}>
-            Navn *
-          </label>
+        <div className="relative">
           <input
             id="contact-name"
             type="text"
@@ -233,11 +251,11 @@ export function ContactForm() {
             className={inputClass}
             placeholder="Ola Nordmann"
           />
-        </div>
-        <div>
-          <label htmlFor="contact-phone" className={labelClass}>
-            Telefon *
+          <label htmlFor="contact-name" className={floatLabelClass}>
+            Navn *
           </label>
+        </div>
+        <div className="relative">
           <input
             id="contact-phone"
             type="tel"
@@ -248,13 +266,13 @@ export function ContactForm() {
             className={inputClass}
             placeholder="+47 000 00 000"
           />
+          <label htmlFor="contact-phone" className={floatLabelClass}>
+            Telefon *
+          </label>
         </div>
       </div>
 
-      <div>
-        <label htmlFor="contact-email" className={labelClass}>
-          E-post *
-        </label>
+      <div className="relative">
         <input
           id="contact-email"
           type="email"
@@ -265,6 +283,9 @@ export function ContactForm() {
           className={inputClass}
           placeholder="ola@eksempel.no"
         />
+        <label htmlFor="contact-email" className={floatLabelClass}>
+          E-post *
+        </label>
       </div>
 
       <fieldset>
@@ -294,15 +315,19 @@ export function ContactForm() {
       </fieldset>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="contact-lawn" className={labelClass}>
-            Plenstørrelse *
-          </label>
+        <div className="relative">
+          <span className={staticLabelClass}>
+            Plenstørrelse {detailsRequired ? "*" : <Optional />}
+          </span>
           <Select
             value={form.lawnSize || undefined}
             onValueChange={(value) => update("lawnSize", value)}
           >
-            <SelectTrigger id="contact-lawn" aria-label="Plenstørrelse">
+            <SelectTrigger
+              id="contact-lawn"
+              aria-label="Plenstørrelse"
+              className="h-14 pb-2 pt-6"
+            >
               <SelectValue placeholder="Velg størrelse" />
             </SelectTrigger>
             <SelectContent>
@@ -315,15 +340,19 @@ export function ContactForm() {
           </Select>
         </div>
 
-        <div>
-          <label htmlFor="contact-mower" className={labelClass}>
-            Robotgressklipper *
-          </label>
+        <div className="relative">
+          <span className={staticLabelClass}>
+            Robotgressklipper {detailsRequired ? "*" : <Optional />}
+          </span>
           <Select
             value={form.mower || undefined}
             onValueChange={(value) => update("mower", value)}
           >
-            <SelectTrigger id="contact-mower" aria-label="Robotgressklipper">
+            <SelectTrigger
+              id="contact-mower"
+              aria-label="Robotgressklipper"
+              className="h-14 pb-2 pt-6"
+            >
               <SelectValue placeholder="Velg modell" />
             </SelectTrigger>
             <SelectContent>
@@ -337,18 +366,18 @@ export function ContactForm() {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="contact-message" className={labelClass}>
-          Melding
-        </label>
+      <div className="relative">
         <textarea
           id="contact-message"
           rows={4}
           value={form.message}
           onChange={(e) => update("message", e.target.value)}
-          className={`${inputClass} resize-y`}
+          className={`${inputClass} resize-y pt-7`}
           placeholder="Fortell gjerne litt om hagen, utfordringer eller spørsmål du har …"
         />
+        <label htmlFor="contact-message" className={floatLabelBlockClass}>
+          Melding
+        </label>
       </div>
 
       <div>

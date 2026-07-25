@@ -20,6 +20,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const SERVICE_LABELS: Record<string, string> = {
   installasjon: "Installasjon av robotgressklipper",
+  befaring: "Befaring av hagen",
   feilsoking: "Feilsøking / service",
   usikker: "Usikker – trenger rådgivning",
 };
@@ -45,6 +46,10 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function orMissing(value: string) {
+  return value || "Ikke oppgitt";
+}
+
 function buildEmailBody(data: ContactPayload, imageNote: string) {
   return [
     "Ny henvendelse fra hagehjelpen.no",
@@ -54,8 +59,8 @@ function buildEmailBody(data: ContactPayload, imageNote: string) {
     `Telefon: ${data.phone}`,
     "",
     `Tjeneste: ${SERVICE_LABELS[data.service] ?? data.service}`,
-    `Plenstørrelse: ${LAWN_LABELS[data.lawnSize] ?? data.lawnSize}`,
-    `Robotgressklipper: ${MOWER_LABELS[data.mower] ?? data.mower}`,
+    `Plenstørrelse: ${LAWN_LABELS[data.lawnSize] ?? orMissing(data.lawnSize)}`,
+    `Robotgressklipper: ${MOWER_LABELS[data.mower] ?? orMissing(data.mower)}`,
     ...(imageNote ? ["", imageNote] : []),
     "",
     "Melding:",
@@ -127,7 +132,16 @@ export async function POST(request: Request) {
     message: fields.message?.trim() ?? "",
   };
 
-  if (!data.name || !data.email || !data.phone || !data.service || !data.lawnSize || !data.mower) {
+  // Ved befaring kartlegger vi plen og modell på stedet.
+  const detailsRequired = data.service !== "befaring";
+
+  if (
+    !data.name ||
+    !data.email ||
+    !data.phone ||
+    !data.service ||
+    (detailsRequired && (!data.lawnSize || !data.mower))
+  ) {
     return NextResponse.json(
       { error: "Fyll ut alle obligatoriske felt." },
       { status: 400 },

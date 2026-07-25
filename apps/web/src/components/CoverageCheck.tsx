@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { sendContactPrefill } from "@/lib/contact-prefill";
 
 type Zone = "kjerne" | "utvidet" | "utenfor";
 
@@ -167,6 +168,11 @@ export function CoverageCheck() {
 
           <a
             href="#kontakt"
+            onClick={() =>
+              sendContactPrefill({
+                service: result.zone === "utenfor" ? "usikker" : "befaring",
+              })
+            }
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-leaf-700 transition-colors hover:text-leaf-800"
           >
             {result.zone === "utenfor" ? "Spør oss likevel" : "Be om befaring"}

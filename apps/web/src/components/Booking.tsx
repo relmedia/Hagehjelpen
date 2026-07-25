@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
+import { sendContactPrefill } from "@/lib/contact-prefill";
 
 /** Sett NEXT_PUBLIC_CAL_LINK til «brukernavn/arrangement» fra Cal.com for å
  *  vise kalenderen. Uten variabelen viser vi hvordan man booker manuelt. */
@@ -120,6 +121,7 @@ export function Booking() {
                 </a>
                 <a
                   href="#kontakt"
+                  onClick={() => sendContactPrefill({ service: "befaring" })}
                   className="rounded-full border border-leaf-200 bg-white px-7 py-3.5 text-sm font-semibold text-leaf-700 transition-colors hover:border-leaf-400 hover:bg-leaf-50"
                 >
                   Send forespørsel
@@ -127,8 +129,7 @@ export function Booking() {
               </div>
 
               <p className="mt-7 border-t border-leaf-100 pt-6 text-xs leading-relaxed text-ink-soft/70">
-                Online booking er på vei. Legg inn Cal.com-lenken i
-                miljøvariabelen NEXT_PUBLIC_CAL_LINK for å vise kalenderen her.
+                Online bestilling er på vei.
               </p>
             </div>
           )}
