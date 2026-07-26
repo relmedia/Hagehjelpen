@@ -6,7 +6,11 @@ import { lawnSizeFromArea, sendContactPrefill } from "@/lib/contact-prefill";
 import { CoverageCheck } from "./CoverageCheck";
 import { LawnMeasure, type MeasureResult } from "./LawnMeasure";
 import { AddressSearch } from "./AddressSearch";
-import { estimateDrivingKm } from "@/lib/geonorge";
+import {
+  estimateDrivingKm,
+  formatAddress,
+  type GeonorgeAddress,
+} from "@/lib/geonorge";
 
 const TIERS = [
   { max: 1000, price: 4000, label: "0–1000 m²" },
@@ -38,6 +42,8 @@ export function LawnCalculator() {
   const [area, setArea] = useState(800);
   const [islands, setIslands] = useState(2);
   const [distance, setDistance] = useState(10);
+  /** Adressen brukeren søkte opp – enten her eller i oppmålingskartet. */
+  const [address, setAddress] = useState<GeonorgeAddress>();
 
   useGSAP(
     () => {
@@ -78,10 +84,17 @@ export function LawnCalculator() {
   const incVat = exVat * (1 + VAT_RATE);
 
   /** Fant brukeren adressen sin i kartet, kjenner vi også avstanden. */
-  function handleMeasured({ area: measured, distanceKm }: MeasureResult) {
+  function handleMeasured({
+    area: measured,
+    distanceKm,
+    address: measuredAddress,
+  }: MeasureResult) {
     setArea(measured);
     if (distanceKm !== undefined) {
       setDistance(Math.min(distanceKm, MAX_DISTANCE));
+    }
+    if (measuredAddress) {
+      setAddress(measuredAddress);
     }
   }
 
@@ -90,6 +103,7 @@ export function LawnCalculator() {
       service: "installasjon",
       lawnSize: lawnSizeFromArea(area),
       message: [
+        ...(address ? [`Adresse: ${formatAddress(address)}.`] : []),
         `Estimat fra plenkalkulatoren: ca. ${kr(exVat)} kr eks. mva.`,
         `Plen: ca. ${kr(area)} m².`,
         `Øyer/bed som skal rammes inn: ${islands}.`,
@@ -192,17 +206,20 @@ export function LawnCalculator() {
                   placeholder="Eller søk opp adressen din"
                   ariaLabel="Søk opp adressen din for å beregne avstanden"
                   className="mt-3"
-                  onSelect={(address) =>
+                  autoLocate
+                  selected={address}
+                  onSelect={(selected) => {
+                    setAddress(selected);
                     setDistance(
                       Math.min(
                         estimateDrivingKm(
-                          address.representasjonspunkt.lat,
-                          address.representasjonspunkt.lon,
+                          selected.representasjonspunkt.lat,
+                          selected.representasjonspunkt.lon,
                         ),
                         MAX_DISTANCE,
                       ),
-                    )
-                  }
+                    );
+                  }}
                 />
                 <p className="mt-2 text-xs text-ink-soft/70">
                   De første 15 kilometerne er inkludert.

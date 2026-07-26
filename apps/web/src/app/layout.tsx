@@ -20,7 +20,7 @@ const sarpanch = Sarpanch({
 });
 
 export const metadata: Metadata = {
-  title: "Hagehjelpen – Elektriske robotgressklippere",
+  title: "Hagehjelpen – Plen og hagetjenester",
   description:
     "Få en perfekt plen uten anstrengelse. Hagehjelpen leverer og installerer elektriske robotgressklippere for huseiere og bedrifter.",
 };

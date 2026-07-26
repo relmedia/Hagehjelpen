@@ -32,7 +32,9 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-[101] flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl border border-leaf-100 bg-white shadow-2xl shadow-ink/25 outline-none data-[state=open]:animate-dialog-in",
+        // Fullskjerm på mobil, sentrert kort fra sm og oppover.
+        "fixed inset-0 z-[101] flex flex-col overflow-hidden bg-white outline-none data-[state=open]:animate-sheet-in",
+        "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[92vh] sm:w-[calc(100vw-1.5rem)] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:border-leaf-100 sm:shadow-2xl sm:shadow-ink/25 sm:data-[state=open]:animate-dialog-in",
         className,
       )}
       {...props}

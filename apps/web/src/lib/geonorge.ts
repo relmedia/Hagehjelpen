@@ -24,6 +24,51 @@ export async function searchAddresses(term: string, signal?: AbortSignal) {
   return data.adresser ?? [];
 }
 
+/**
+ * Nærmeste adresse til et koordinat. GPS-en bommer gjerne noen titalls meter,
+ * så vi søker i en liten radius og velger treffet som ligger nærmest.
+ */
+export async function findNearestAddress(
+  point: { lat: number; lon: number },
+  signal?: AbortSignal,
+) {
+  const res = await fetch(
+    `https://ws.geonorge.no/adresser/v1/punktsok?lat=${point.lat}&lon=${point.lon}&radius=300&treffPerSide=20&filtrer=adresser.adressetekst,adresser.postnummer,adresser.poststed,adresser.representasjonspunkt`,
+    { signal },
+  );
+
+  const data = (await res.json()) as { adresser?: GeonorgeAddress[] };
+  return (data.adresser ?? []).reduce<GeonorgeAddress | undefined>(
+    (nearest, candidate) =>
+      !nearest ||
+      haversineKm(point, candidate.representasjonspunkt) <
+        haversineKm(point, nearest.representasjonspunkt)
+        ? candidate
+        : nearest,
+    undefined,
+  );
+}
+
+/** Kartverket skriver poststed med versaler («RÆGE»); vi vil ha «Ræge». */
+export function formatPlace(place: string) {
+  return place
+    .toLocaleLowerCase("no")
+    .replace(/(^|[\s\-/])(\p{L})/gu, (_, prefix: string, letter: string) =>
+      prefix + letter.toLocaleUpperCase("no"),
+    );
+}
+
+/** Full adresse på én linje: «Ølbergvegen 101, 4053 Ræge». */
+export function formatAddress(address: GeonorgeAddress) {
+  return [
+    address.adressetekst,
+    `${address.postnummer} ${formatPlace(address.poststed)}`,
+  ]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
 export function haversineKm(
   from: { lat: number; lon: number },
   to: { lat: number; lon: number },
