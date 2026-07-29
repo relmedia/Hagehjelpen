@@ -3,16 +3,7 @@
 import { useRef } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { sendContactPrefill } from "@/lib/contact-prefill";
-
-const INCLUDED = [
-  "Gjennomgang av eiendommen sammen med deg før installasjon",
-  "Installasjon av robotklipper og ladestasjon",
-  "Kanttråd, plugger og skjøter",
-  "Programmering av robotklipperen",
-  "Kort gjennomgang av brukermanual og riktig bruk",
-  "Etterkontroll og justering ved behov innen 2 uker",
-  "Kjøring inntil 15 km",
-] as const;
+import type { PricePlan } from "@/lib/prices";
 
 const EXCLUDED = [
   "Montering av strømuttak og kabel",
@@ -22,28 +13,11 @@ const EXCLUDED = [
   "Innramming av mer enn 2 «øyer» (f.eks. blomsterbed): 250 kr/stk",
 ] as const;
 
-const PLANS = [
-  {
-    range: "0 – 1000 m²",
-    price: "4 000",
-    featured: false,
-    lawnSize: "0-1000",
-  },
-  {
-    range: "1000 – 2000 m²",
-    price: "6 750",
-    featured: true,
-    lawnSize: "1000-2000",
-  },
-  {
-    range: "2000 m² og oppover",
-    price: "9 250",
-    featured: false,
-    lawnSize: "2000-plus",
-  },
-] as const;
+function kr(value: number) {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
 
-export function InstallationPricing() {
+export function InstallationPricing({ plans }: { plans: PricePlan[] }) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -114,9 +88,9 @@ export function InstallationPricing() {
         </div>
 
         <div className="mt-16 grid gap-6 lg:grid-cols-3">
-          {PLANS.map((plan) => (
+          {plans.map((plan) => (
             <article
-              key={plan.range}
+              key={plan.title}
               className={`pricing-card gsap-reveal relative flex flex-col rounded-3xl border p-8 transition-shadow ${
                 plan.featured
                   ? "border-leaf-400 bg-gradient-to-b from-leaf-50 to-white shadow-xl shadow-leaf-900/10 ring-1 ring-leaf-400/40"
@@ -130,17 +104,22 @@ export function InstallationPricing() {
               )}
 
               <p className="text-sm font-semibold uppercase tracking-wider text-leaf-600">
-                {plan.range}
+                {plan.title}
               </p>
               <div className="mt-4 flex items-end gap-1">
                 <span className="font-display text-4xl font-bold text-ink">
-                  {plan.price},-
+                  {plan.price === null ? "Etter befaring" : `${kr(plan.price)},-`}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-ink-soft">eks. mva</p>
+              {plan.price !== null && (
+                <p className="mt-1 text-sm text-ink-soft">eks. mva</p>
+              )}
+              {plan.note && (
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{plan.note}</p>
+              )}
 
               <ul className="mt-8 flex-1 space-y-3">
-                {INCLUDED.map((item) => (
+                {plan.includes.map((item) => (
                   <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink-soft">
                     <svg
                       className="mt-0.5 h-5 w-5 shrink-0 text-leaf-500"

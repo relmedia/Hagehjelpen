@@ -14,14 +14,21 @@ import { Faq } from "@/components/Faq";
 import { Booking } from "@/components/Booking";
 import { Cta } from "@/components/Cta";
 import { Footer } from "@/components/Footer";
+import { getCoverageAreas } from "@/lib/coverage";
 import { getMowerModels } from "@/lib/mowers";
+import { getPricePlans } from "@/lib/prices";
+import { getTestimonials } from "@/lib/testimonials";
 
 // Innhold redigeres i dashbordet, så siden bygges om jevnlig i stedet for å
 // treffe Supabase på hver visning.
 export const revalidate = 600;
 
 export default async function Home() {
-  const mowers = await getMowerModels();
+  const [mowers, pricePlans, coverageAreas] = await Promise.all([
+    getMowerModels(),
+    getPricePlans(),
+    getCoverageAreas(),
+  ]);
 
   return (
     <>
@@ -31,8 +38,8 @@ export default async function Home() {
         <Intro />
         <Features />
         <Process />
-        <InstallationPricing />
-        <LawnCalculator />
+        <InstallationPricing plans={pricePlans} />
+        <LawnCalculator coverageAreas={coverageAreas} />
         <MowerAdvisor models={mowers} />
         <Checklist />
         <Feilsoking />

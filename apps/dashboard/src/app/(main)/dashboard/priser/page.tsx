@@ -67,6 +67,11 @@ export default async function PriserPage() {
                   <Link href={`/dashboard/priser/${tier.id}`} className="hover:underline">
                     {tier.title}
                   </Link>
+                  {tier.featured && (
+                    <Badge variant="secondary" className="ml-2 align-middle font-normal">
+                      Mest valgt
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{areaLabel(tier)}</TableCell>
                 <TableCell className="text-right">

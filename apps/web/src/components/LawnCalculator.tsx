@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { lawnSizeFromArea, sendContactPrefill } from "@/lib/contact-prefill";
+import type { CoverageArea } from "@/lib/coverage";
 import { CoverageCheck } from "./CoverageCheck";
 import { LawnMeasure, type MeasureResult } from "./LawnMeasure";
 import { AddressSearch } from "./AddressSearch";
@@ -37,7 +38,7 @@ function kr(value: number) {
 const sliderClass =
   "h-2 w-full cursor-pointer appearance-none rounded-full bg-leaf-100 accent-leaf-500 outline-none focus-visible:ring-2 focus-visible:ring-leaf-400/40";
 
-export function LawnCalculator() {
+export function LawnCalculator({ coverageAreas }: { coverageAreas: CoverageArea[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const [area, setArea] = useState(800);
   const [islands, setIslands] = useState(2);
@@ -281,7 +282,7 @@ export function LawnCalculator() {
           </div>
 
           <div className="calculator-card gsap-reveal">
-            <CoverageCheck />
+            <CoverageCheck areas={coverageAreas} />
           </div>
         </div>
       </div>

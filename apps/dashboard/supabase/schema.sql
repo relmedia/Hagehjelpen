@@ -52,22 +52,50 @@ create table if not exists price_tiers (
   price integer,
   includes jsonb default '[]'::jsonb,
   note text,
+  featured boolean default false,
   "order" integer default 0,
   active boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
+-- For databaser som ble opprettet før featured-kolonnen fantes.
+alter table price_tiers add column if not exists featured boolean default false;
+
+-- coverage_areas gikk fra ett postnummer per rad til postnummerintervaller, slik
+-- dekningssjekken på nettsiden faktisk fungerer. Den gamle tabellen slippes bare
+-- hvis den er tom, så data forsvinner aldri i stillhet.
+do $$
+declare
+  rows_left bigint;
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_name = 'coverage_areas' and column_name = 'postal_code'
+  ) then
+    execute 'select count(*) from coverage_areas' into rows_left;
+    if rows_left > 0 then
+      raise exception
+        'coverage_areas har % rader i gammelt format (ett postnummer per rad). Flytt dem over til intervaller manuelt før du kjører denne migrasjonen.',
+        rows_left;
+    end if;
+    execute 'drop table coverage_areas';
+  end if;
+end $$;
+
 create table if not exists coverage_areas (
   id uuid primary key default gen_random_uuid(),
-  postal_code text not null unique,
   place text not null,
-  zone text not null default 'kjerne' check (zone in ('kjerne', 'utvidet')),
+  postal_code_from integer not null,
+  postal_code_to integer not null,
+  zone text not null default 'kjerne' check (zone in ('kjerne', 'utvidet', 'utenfor')),
   travel_fee integer,
   note text,
+  "order" integer default 0,
   active boolean default true,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  constraint coverage_areas_range check (postal_code_to >= postal_code_from)
 );
 
 create table if not exists testimonials (

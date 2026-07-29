@@ -2,33 +2,8 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { sendContactPrefill } from "@/lib/contact-prefill";
+import type { CoverageArea, Zone } from "@/lib/coverage";
 import { CoverageMap } from "./CoverageMap";
-
-type Zone = "kjerne" | "utvidet" | "utenfor";
-
-type Area = {
-  from: number;
-  to: number;
-  name: string;
-  zone: Zone;
-};
-
-/** Postnummerintervaller rundt basen på Ræge. Brukes bare til en veiledende
- *  indikasjon – eksakt kjøretillegg bekreftes når vi tar kontakt. */
-const AREAS: Area[] = [
-  { from: 4001, to: 4049, name: "Stavanger", zone: "kjerne" },
-  { from: 4050, to: 4069, name: "Sola", zone: "kjerne" },
-  { from: 4070, to: 4079, name: "Randaberg", zone: "kjerne" },
-  { from: 4100, to: 4129, name: "Strand og Jørpeland", zone: "utvidet" },
-  { from: 4130, to: 4199, name: "Ryfylke", zone: "utvidet" },
-  { from: 4200, to: 4299, name: "Sauda og Suldal", zone: "utenfor" },
-  { from: 4300, to: 4329, name: "Sandnes", zone: "kjerne" },
-  { from: 4330, to: 4339, name: "Gjesdal og Ålgård", zone: "utvidet" },
-  { from: 4340, to: 4349, name: "Time og Bryne", zone: "utvidet" },
-  { from: 4350, to: 4359, name: "Klepp og Kvernaland", zone: "utvidet" },
-  { from: 4360, to: 4369, name: "Hå", zone: "utvidet" },
-  { from: 4370, to: 4399, name: "Eigersund og Dalane", zone: "utenfor" },
-];
 
 const ZONE_STYLES: Record<Zone, { card: string; dot: string; title: string }> = {
   kjerne: {
@@ -52,13 +27,15 @@ type Result = {
   zone: Zone;
   code: string;
   name?: string;
+  travelFee?: number | null;
+  note?: string | null;
 };
 
-function lookup(code: number): Area | undefined {
-  return AREAS.find((area) => code >= area.from && code <= area.to);
+function kr(value: number) {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 
-export function CoverageCheck() {
+export function CoverageCheck({ areas }: { areas: CoverageArea[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -81,12 +58,15 @@ export function CoverageCheck() {
       return;
     }
 
-    const area = lookup(Number(digits));
+    const code = Number(digits);
+    const area = areas.find((item) => code >= item.from && code <= item.to);
     setError("");
     setResult({
       code: digits,
       name: area?.name,
       zone: area?.zone ?? "utenfor",
+      travelFee: area?.travelFee,
+      note: area?.note,
     });
   }
 
@@ -202,6 +182,16 @@ export function CoverageCheck() {
                 </>
               )}
             </p>
+
+            {(result.travelFee || result.note) && (
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                {result.travelFee
+                  ? `Kjøretillegg for ${result.name}: ${kr(result.travelFee)} kr.`
+                  : null}
+                {result.travelFee && result.note ? " " : null}
+                {result.note}
+              </p>
+            )}
 
             <a
               href="#kontakt"

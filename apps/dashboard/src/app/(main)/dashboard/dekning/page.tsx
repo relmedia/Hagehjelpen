@@ -12,9 +12,14 @@ import { COVERAGE_ZONE_LABELS } from "@/types/content";
 
 import { DeleteContentButton } from "../_components/delete-content-button";
 
+function rangeLabel(from: number, to: number): string {
+  return from === to ? String(from) : `${from}–${to}`;
+}
+
 export default async function DekningPage() {
   const areas = await getCoverageAreas();
   const core = areas.filter((area) => area.zone === "kjerne").length;
+  const extended = areas.filter((area) => area.zone === "utvidet").length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -22,20 +27,21 @@ export default async function DekningPage() {
         <div className="space-y-1">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">Dekningsområde</h1>
           <p className="text-muted-foreground text-sm">
-            Postnumrene vi kjører ut til. Dette avgjør svaret kunden får i dekningssjekken på nettsiden.
+            Postnummerintervallene vi kjører ut til. Dette avgjør svaret kunden får i dekningssjekken på nettsiden.
           </p>
         </div>
         <Button asChild>
           <Link href="/dashboard/dekning/new">
             <Plus className="size-4" />
-            Nytt postnummer
+            Nytt område
           </Link>
         </Button>
       </div>
 
       {areas.length > 0 && (
         <p className="text-muted-foreground text-xs">
-          {areas.length} postnummer registrert – {core} i kjerneområdet og {areas.length - core} i utvidet område.
+          {areas.length} områder registrert – {core} i kjerneområdet, {extended} i utvidet område og{" "}
+          {areas.length - core - extended} utenfor vanlig rute.
         </p>
       )}
 
@@ -43,8 +49,8 @@ export default async function DekningPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-28">Postnummer</TableHead>
-              <TableHead>Poststed</TableHead>
+              <TableHead className="w-32">Postnummer</TableHead>
+              <TableHead>Område</TableHead>
               <TableHead className="w-40">Sone</TableHead>
               <TableHead className="w-32 text-right">Tillegg</TableHead>
               <TableHead className="hidden lg:table-cell">Merknad</TableHead>
@@ -64,12 +70,12 @@ export default async function DekningPage() {
               <TableRow key={area.id}>
                 <TableCell className="font-medium tabular-nums">
                   <Link href={`/dashboard/dekning/${area.id}`} className="hover:underline">
-                    {area.postal_code}
+                    {rangeLabel(area.postal_code_from, area.postal_code_to)}
                   </Link>
                 </TableCell>
                 <TableCell>{area.place}</TableCell>
                 <TableCell>
-                  <Badge variant={area.zone === "kjerne" ? "default" : "secondary"}>
+                  <Badge variant={area.zone === "kjerne" ? "default" : area.zone === "utvidet" ? "secondary" : "outline"}>
                     {COVERAGE_ZONE_LABELS[area.zone]}
                   </Badge>
                 </TableCell>
@@ -89,7 +95,7 @@ export default async function DekningPage() {
                     </Button>
                     <DeleteContentButton
                       id={area.id}
-                      label={`${area.postal_code} ${area.place}`}
+                      label={`${area.place} (${rangeLabel(area.postal_code_from, area.postal_code_to)})`}
                       action={deleteCoverageArea}
                     />
                   </div>

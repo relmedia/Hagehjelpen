@@ -73,18 +73,25 @@ export function PriceTierForm({ tier }: { readonly tier: PriceTier | null }) {
           <Textarea id="note" name="note" rows={2} defaultValue={tier?.note ?? ""} />
           <FieldDescription>Liten tekst under prisen, for eksempel om tillegg for kompliserte tomter.</FieldDescription>
         </Field>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field className="gap-1.5">
-            <FieldLabel htmlFor="order">Rekkefølge</FieldLabel>
-            <Input id="order" name="order" type="number" defaultValue={tier?.order ?? 0} />
-          </Field>
-          <Field orientation="horizontal" className="items-center gap-3 sm:self-end">
-            <Switch id="active" name="active" defaultChecked={tier?.active ?? true} />
-            <FieldLabel htmlFor="active" className="font-normal">
-              Vis på nettsiden
+        <Field className="gap-1.5 sm:max-w-xs">
+          <FieldLabel htmlFor="order">Rekkefølge</FieldLabel>
+          <Input id="order" name="order" type="number" defaultValue={tier?.order ?? 0} />
+        </Field>
+        <Field orientation="horizontal" className="items-center gap-3">
+          <Switch id="featured" name="featured" defaultChecked={tier?.featured ?? false} />
+          <div>
+            <FieldLabel htmlFor="featured" className="font-normal">
+              Marker som «Mest valgt»
             </FieldLabel>
-          </Field>
-        </div>
+            <FieldDescription>Kortet får merkelapp og uthevet ramme på nettsiden.</FieldDescription>
+          </div>
+        </Field>
+        <Field orientation="horizontal" className="items-center gap-3">
+          <Switch id="active" name="active" defaultChecked={tier?.active ?? true} />
+          <FieldLabel htmlFor="active" className="font-normal">
+            Vis på nettsiden
+          </FieldLabel>
+        </Field>
       </FieldGroup>
 
       <div className="flex gap-3">

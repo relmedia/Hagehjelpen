@@ -148,6 +148,7 @@ export async function savePriceTier(formData: FormData): Promise<ActionResult> {
     price: intOrNull(formData, "price"),
     includes: lines(formData, "includes"),
     note: strOrNull(formData, "note"),
+    featured: bool(formData, "featured"),
     order: intOrNull(formData, "order") ?? 0,
     active: bool(formData, "active"),
     updated_at: now(),
@@ -167,20 +168,29 @@ export async function deletePriceTier(id: string): Promise<ActionResult> {
 
 export async function saveCoverageArea(formData: FormData): Promise<ActionResult> {
   const id = str(formData, "id");
-  const postalCode = str(formData, "postal_code");
   const place = str(formData, "place");
+  const from = str(formData, "postal_code_from");
+  const to = str(formData, "postal_code_to");
 
-  if (!/^\d{4}$/.test(postalCode)) return { ok: false, error: "Postnummer må være fire siffer." };
-  if (!place) return { ok: false, error: "Poststed er påkrevd." };
+  if (!place) return { ok: false, error: "Område er påkrevd." };
+  if (!/^\d{4}$/.test(from) || !/^\d{4}$/.test(to)) {
+    return { ok: false, error: "Postnumrene må være fire siffer." };
+  }
+  if (Number(to) < Number(from)) {
+    return { ok: false, error: "Til-postnummeret må være likt eller høyere enn fra-postnummeret." };
+  }
 
-  const zone = str(formData, "zone") === "utvidet" ? "utvidet" : "kjerne";
+  const zoneValue = str(formData, "zone");
+  const zone = zoneValue === "utvidet" || zoneValue === "utenfor" ? zoneValue : "kjerne";
 
   const error = await upsertRow("coverage_areas", id, {
-    postal_code: postalCode,
     place,
+    postal_code_from: Number(from),
+    postal_code_to: Number(to),
     zone,
     travel_fee: intOrNull(formData, "travel_fee"),
     note: strOrNull(formData, "note"),
+    order: intOrNull(formData, "order") ?? 0,
     active: bool(formData, "active"),
     updated_at: now(),
   });

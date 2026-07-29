@@ -18,16 +18,17 @@ export default async function CoverageAreaEditPage({ params }: { params: Promise
     <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
       <div className="space-y-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {isNew ? "Nytt postnummer" : "Rediger postnummer"}
+          {isNew ? "Nytt område" : "Rediger område"}
         </h1>
         <p className="text-muted-foreground text-sm">
-          Kjerneområdet får svaret «vi dekker deg», utvidet område får beskjed om tillegg for kjøring.
+          Kjerneområdet får svaret «vi dekker deg», utvidet område får beskjed om tillegg for kjøring, og områder
+          utenfor vanlig rute blir bedt om å ta kontakt likevel.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{isNew ? "Legg til område" : `${area?.postal_code} ${area?.place}`}</CardTitle>
+          <CardTitle>{isNew ? "Legg til område" : area?.place}</CardTitle>
         </CardHeader>
         <CardContent>
           <CoverageAreaForm area={area} />

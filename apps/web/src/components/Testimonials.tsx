@@ -2,35 +2,13 @@
 
 import { useRef } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import type { Testimonial } from "@/lib/testimonials";
 
-/** Eksempelomtaler – bytt ut med ekte sitater før lansering. */
-const TESTIMONIALS = [
-  {
-    quote:
-      "Vi hadde prøvd å sette opp klipperen selv og ga opp etter to helger. Hagehjelpen var ferdig på en formiddag, og plenen har vært perfekt siden.",
-    name: "Marius H.",
-    location: "Sola",
-    service: "Installasjon, 1200 m²",
-  },
-  {
-    quote:
-      "Grundig gjennomgang av hagen før de begynte, og de forklarte hvordan alt fungerte etterpå. Kom tilbake og justerte kanttråden uten ekstra kostnad.",
-    name: "Ingrid B.",
-    location: "Stavanger",
-    service: "Installasjon, 700 m²",
-  },
-  {
-    quote:
-      "Klipperen kjørte seg fast i den samme bakken hver dag. De fant feilen med én gang og flyttet ladestasjonen. Rask og ryddig service.",
-    name: "Tore K.",
-    location: "Sandnes",
-    service: "Feilsøking",
-  },
-] as const;
+function Stars({ rating }: { rating: number }) {
+  const filled = Math.min(Math.max(Math.round(rating), 1), 5);
 
-function Stars() {
   return (
-    <div className="flex gap-0.5" aria-label="5 av 5 stjerner">
+    <div className="flex gap-0.5" aria-label={`${filled} av 5 stjerner`}>
       {Array.from({ length: 5 }).map((_, index) => (
         <svg
           key={index}
@@ -38,7 +16,7 @@ function Stars() {
           height="16"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="text-leaf-500"
+          className={index < filled ? "text-leaf-500" : "text-leaf-100"}
           aria-hidden
         >
           <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.11 6.47L12 17.35 6.19 20.4l1.11-6.47L2.6 9.35l6.5-.95L12 2.5z" />
@@ -48,7 +26,7 @@ function Stars() {
   );
 }
 
-export function Testimonials() {
+export function Testimonials({ items }: { items: Testimonial[] }) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -107,12 +85,12 @@ export function Testimonials() {
         </div>
 
         <div className="mt-16 grid gap-6 lg:grid-cols-3">
-          {TESTIMONIALS.map((item) => (
+          {items.map((item, index) => (
             <figure
-              key={item.name}
+              key={`${item.name}-${index}`}
               className="testimonial-card gsap-reveal flex flex-col rounded-3xl border border-leaf-100 bg-white p-8 shadow-sm"
             >
-              <Stars />
+              <Stars rating={item.rating} />
               <blockquote className="mt-5 flex-1 text-sm leading-relaxed text-ink-soft">
                 «{item.quote}»
               </blockquote>
@@ -122,11 +100,13 @@ export function Testimonials() {
                 </span>
                 <span>
                   <span className="block text-sm font-semibold text-ink">
-                    {item.name}, {item.location}
+                    {item.location ? `${item.name}, ${item.location}` : item.name}
                   </span>
-                  <span className="block text-xs text-ink-soft/70">
-                    {item.service}
-                  </span>
+                  {item.service && (
+                    <span className="block text-xs text-ink-soft/70">
+                      {item.service}
+                    </span>
+                  )}
                 </span>
               </figcaption>
             </figure>

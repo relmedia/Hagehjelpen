@@ -88,7 +88,7 @@ export async function getPriceTier(id: string): Promise<PriceTier | null> {
 export async function getCoverageAreas(): Promise<CoverageArea[]> {
   return (await selectAll<CoverageArea>("coverage_areas"))
     .slice()
-    .sort((a, b) => a.postal_code.localeCompare(b.postal_code, "nb"));
+    .sort((a, b) => a.postal_code_from - b.postal_code_from);
 }
 
 export async function getCoverageArea(id: string): Promise<CoverageArea | null> {

@@ -41,22 +41,36 @@ export function CoverageAreaForm({ area }: { readonly area: CoverageArea | null 
       {/* The Select is presentation only – this input is what the form posts. */}
       <input type="hidden" name="zone" value={zone} />
       <FieldGroup className="gap-5">
+        <Field className="gap-1.5">
+          <FieldLabel htmlFor="place">Område</FieldLabel>
+          <Input id="place" name="place" defaultValue={area?.place ?? ""} placeholder="Sola" required />
+          <FieldDescription>Navnet kunden ser i svaret, for eksempel «Sola» eller «Time og Bryne».</FieldDescription>
+        </Field>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field className="gap-1.5">
-            <FieldLabel htmlFor="postal_code">Postnummer</FieldLabel>
+            <FieldLabel htmlFor="postal_code_from">Fra postnummer</FieldLabel>
             <Input
-              id="postal_code"
-              name="postal_code"
+              id="postal_code_from"
+              name="postal_code_from"
               inputMode="numeric"
               maxLength={4}
-              defaultValue={area?.postal_code ?? ""}
-              placeholder="4053"
+              defaultValue={area?.postal_code_from ?? ""}
+              placeholder="4050"
               required
             />
           </Field>
           <Field className="gap-1.5">
-            <FieldLabel htmlFor="place">Poststed</FieldLabel>
-            <Input id="place" name="place" defaultValue={area?.place ?? ""} placeholder="Ræge" required />
+            <FieldLabel htmlFor="postal_code_to">Til postnummer</FieldLabel>
+            <Input
+              id="postal_code_to"
+              name="postal_code_to"
+              inputMode="numeric"
+              maxLength={4}
+              defaultValue={area?.postal_code_to ?? ""}
+              placeholder="4069"
+              required
+            />
+            <FieldDescription>Samme tall som «fra» hvis området bare har ett postnummer.</FieldDescription>
           </Field>
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -85,13 +99,19 @@ export function CoverageAreaForm({ area }: { readonly area: CoverageArea | null 
               step={50}
               defaultValue={area?.travel_fee ?? ""}
             />
-            <FieldDescription>Brukes for utvidet område. Tom = ingen tillegg.</FieldDescription>
+            <FieldDescription>Vises i svaret på nettsiden. Tom = ingen tillegg.</FieldDescription>
           </Field>
         </div>
         <Field className="gap-1.5">
           <FieldLabel htmlFor="note">Merknad</FieldLabel>
           <Textarea id="note" name="note" rows={2} defaultValue={area?.note ?? ""} />
-          <FieldDescription>Intern notis, for eksempel «kun etter avtale om ferge».</FieldDescription>
+          <FieldDescription>
+            Ekstra setning i svaret kunden får, for eksempel «kun etter avtale om ferge».
+          </FieldDescription>
+        </Field>
+        <Field className="gap-1.5 sm:max-w-xs">
+          <FieldLabel htmlFor="order">Rekkefølge</FieldLabel>
+          <Input id="order" name="order" type="number" defaultValue={area?.order ?? 0} />
         </Field>
         <Field orientation="horizontal" className="items-center gap-3">
           <Switch id="active" name="active" defaultChecked={area?.active ?? true} />
@@ -99,7 +119,7 @@ export function CoverageAreaForm({ area }: { readonly area: CoverageArea | null 
             <FieldLabel htmlFor="active" className="font-normal">
               Aktiv
             </FieldLabel>
-            <FieldDescription>Inaktive postnummer gir «utenfor dekning» i sjekken.</FieldDescription>
+            <FieldDescription>Inaktive områder gir «utenfor dekning» i sjekken.</FieldDescription>
           </div>
         </Field>
       </FieldGroup>

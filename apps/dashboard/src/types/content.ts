@@ -39,20 +39,23 @@ export type PriceTier = {
   price: number | null;
   includes: string[] | null;
   note: string | null;
+  featured: boolean | null;
   order: number | null;
   active: boolean | null;
 };
 
-export type CoverageZone = "kjerne" | "utvidet";
+export type CoverageZone = "kjerne" | "utvidet" | "utenfor";
 
-// Postcodes we serve, and what the trip costs outside the core area.
+// Postcode ranges we serve, and what the trip costs outside the core area.
 export type CoverageArea = {
   id: string;
-  postal_code: string;
   place: string;
+  postal_code_from: number;
+  postal_code_to: number;
   zone: CoverageZone;
   travel_fee: number | null;
   note: string | null;
+  order: number | null;
   active: boolean | null;
 };
 
@@ -97,6 +100,7 @@ export type Article = {
 export const COVERAGE_ZONE_LABELS: Record<CoverageZone, string> = {
   kjerne: "Kjerneområde",
   utvidet: "Utvidet område",
+  utenfor: "Utenfor vanlig rute",
 };
 
 export type EmailSettings = {

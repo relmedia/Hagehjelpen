@@ -30,9 +30,10 @@ NEXT_PUBLIC_SITE_URL=https://hagehjelpen.no
    registrering – brukere opprettes manuelt).
 3. Lag et **public** storage-bucket som heter `media`. Bildeopplasting i
    innholdsskjemaene legger filene i `media/uploads`.
-4. Kjør `supabase/seed-mowers.sql` for å legge inn robotklipperne som allerede
-   ligger på forsiden. Filen kan kjøres flere ganger – radene matches på slug.
-   Bilde per modell laster du opp i `/dashboard/klippere/<id>`.
+4. Kjør `supabase/seed-mowers.sql`, `supabase/seed-price-tiers.sql` og
+   `supabase/seed-coverage-areas.sql` for å legge inn robotklipperne, prisnivåene
+   og dekningsområdene som allerede ligger på forsiden. Alle kan kjøres flere
+   ganger. Bilde per modell laster du opp i `/dashboard/klippere/<id>`.
 
 Analytics-kortene på forsiden bruker RPC-funksjonene `analytics_summary`,
 `analytics_daily`, `analytics_top_pages`, `analytics_referrers`,
@@ -77,6 +78,8 @@ src/
   navigation/sidebar/              menyen
 supabase/schema.sql                tabeller og RLS
 supabase/seed-mowers.sql           robotklipperne fra forsiden
+supabase/seed-price-tiers.sql      prisnivåene fra forsiden
+supabase/seed-coverage-areas.sql   dekningsområdene fra forsiden
 ```
 
 ## E-post
