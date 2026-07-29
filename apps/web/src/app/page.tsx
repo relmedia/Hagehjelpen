@@ -14,8 +14,15 @@ import { Faq } from "@/components/Faq";
 import { Booking } from "@/components/Booking";
 import { Cta } from "@/components/Cta";
 import { Footer } from "@/components/Footer";
+import { getMowerModels } from "@/lib/mowers";
 
-export default function Home() {
+// Innhold redigeres i dashbordet, så siden bygges om jevnlig i stedet for å
+// treffe Supabase på hver visning.
+export const revalidate = 600;
+
+export default async function Home() {
+  const mowers = await getMowerModels();
+
   return (
     <>
       <Header />
@@ -26,7 +33,7 @@ export default function Home() {
         <Process />
         <InstallationPricing />
         <LawnCalculator />
-        <MowerAdvisor />
+        <MowerAdvisor models={mowers} />
         <Checklist />
         <Feilsoking />
         <Testimonials />

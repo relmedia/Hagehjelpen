@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { lawnSizeFromArea, sendContactPrefill } from "@/lib/contact-prefill";
-
-type Terrain = "flat" | "kupert" | "bratt";
+import type { MowerModel, Terrain } from "@/lib/mowers";
 
 const TERRAIN_OPTIONS: {
   value: Terrain;
@@ -17,82 +17,6 @@ const TERRAIN_OPTIONS: {
   { value: "bratt", label: "Bratte partier", hint: "Over 35 % helling", rank: 2 },
 ];
 
-type Model = {
-  name: string;
-  area: number;
-  terrain: Terrain;
-  install: string;
-  summary: string;
-};
-
-/** Klippeareal og modellnavn følger Husqvarnas egen serieoversikt. Endelig
- *  modell bekrefter vi alltid på befaring. */
-const MODELS: Model[] = [
-  {
-    name: "Automower® Aspire™ R6V",
-    area: 600,
-    terrain: "flat",
-    install: "Kabelfri – virtuell grense",
-    summary: "Kompakt klipper for små, oversiktlige hager og trange passasjer.",
-  },
-  {
-    name: "Automower® 308V",
-    area: 800,
-    terrain: "flat",
-    install: "Kabelfri – virtuell grense",
-    summary: "Enkel og driftssikker modell for vanlige villahager.",
-  },
-  {
-    name: "Automower® 312V",
-    area: 1200,
-    terrain: "flat",
-    install: "Kabelfri – virtuell grense",
-    summary: "Litt større kapasitet, fortsatt uten kanttråd rundt plenen.",
-  },
-  {
-    name: "Automower® 305E NERA",
-    area: 900,
-    terrain: "kupert",
-    install: "Kanttråd, kan oppgraderes til kabelfri (EPOS)",
-    summary: "Håndterer skråninger og delte soner i mellomstore hager.",
-  },
-  {
-    name: "Automower® 405VE NERA",
-    area: 900,
-    terrain: "kupert",
-    install: "Kabelfri – virtuell grense",
-    summary: "Kabelfri løsning for hager med høydeforskjeller og flere soner.",
-  },
-  {
-    name: "Automower® 310E NERA",
-    area: 1500,
-    terrain: "kupert",
-    install: "Kanttråd, kan oppgraderes til kabelfri (EPOS)",
-    summary: "Robust valg for større, kuperte plener med hindringer.",
-  },
-  {
-    name: "Automower® 410VE NERA",
-    area: 1500,
-    terrain: "kupert",
-    install: "Kabelfri – virtuell grense",
-    summary: "Systematisk klipping i store hager uten tråd i plenen.",
-  },
-  {
-    name: "Automower® 320 NERA",
-    area: 3300,
-    terrain: "bratt",
-    install: "Kanttråd, kan oppgraderes til kabelfri (EPOS)",
-    summary: "Kraftig modell som takler bratte partier og krevende terreng.",
-  },
-  {
-    name: "Automower® 430V NERA",
-    area: 4800,
-    terrain: "bratt",
-    install: "Kabelfri – virtuell grense",
-    summary: "Toppmodell for store eiendommer, bakker og flere klippesoner.",
-  },
-];
-
 function rankOf(terrain: Terrain) {
   return TERRAIN_OPTIONS.find((option) => option.value === terrain)?.rank ?? 0;
 }
@@ -101,7 +25,7 @@ function kr(value: number) {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 
-export function MowerAdvisor() {
+export function MowerAdvisor({ models }: { models: MowerModel[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const [area, setArea] = useState(800);
   const [terrain, setTerrain] = useState<Terrain>("flat");
@@ -136,13 +60,12 @@ export function MowerAdvisor() {
   );
 
   const wanted = rankOf(terrain);
-  const matches = MODELS.filter(
-    (model) => model.area >= area && rankOf(model.terrain) >= wanted,
-  )
+  const matches = models
+    .filter((model) => model.area >= area && rankOf(model.terrain) >= wanted)
     .sort((a, b) => a.area - b.area)
     .slice(0, 3);
 
-  function handleSendToForm(model: Model) {
+  function handleSendToForm(model: MowerModel) {
     const terrainLabel = TERRAIN_OPTIONS.find(
       (option) => option.value === terrain,
     )?.label.toLowerCase();
@@ -243,7 +166,7 @@ export function MowerAdvisor() {
                 <div className="mt-6 grid gap-4 lg:grid-cols-3">
                   {matches.map((model, index) => (
                     <article
-                      key={model.name}
+                      key={model.slug}
                       className={`relative flex flex-col rounded-2xl border bg-white p-6 ${
                         index === 0
                           ? "border-leaf-400 shadow-lg shadow-leaf-900/5 ring-1 ring-leaf-400/30"
@@ -255,12 +178,26 @@ export function MowerAdvisor() {
                           Best match
                         </span>
                       )}
+                      {model.image && (
+                        <div className="mb-5 flex h-36 items-center justify-center overflow-hidden rounded-xl bg-cream">
+                          <Image
+                            src={model.image}
+                            alt={model.imageAlt ?? model.name}
+                            width={360}
+                            height={240}
+                            sizes="(min-width: 1024px) 20rem, 100vw"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                      )}
                       <h3 className="font-display text-lg font-bold text-ink">
                         {model.name}
                       </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                        {model.summary}
-                      </p>
+                      {model.summary && (
+                        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                          {model.summary}
+                        </p>
+                      )}
                       <dl className="mt-5 space-y-2 border-t border-leaf-100 pt-4 text-sm">
                         <div className="flex justify-between gap-3">
                           <dt className="text-ink-soft">Klippeareal</dt>
@@ -268,24 +205,28 @@ export function MowerAdvisor() {
                             Opptil {kr(model.area)} m²
                           </dd>
                         </div>
-                        <div className="flex justify-between gap-3">
-                          <dt className="shrink-0 text-ink-soft">Grense</dt>
-                          <dd className="text-right font-medium text-ink">
-                            {model.install}
-                          </dd>
-                        </div>
+                        {model.install && (
+                          <div className="flex justify-between gap-3">
+                            <dt className="shrink-0 text-ink-soft">Grense</dt>
+                            <dd className="text-right font-medium text-ink">
+                              {model.install}
+                            </dd>
+                          </div>
+                        )}
                       </dl>
-                      <a
-                        href="#kontakt"
-                        onClick={() => handleSendToForm(model)}
-                        className={`mt-6 block rounded-full px-5 py-3 text-center text-sm font-semibold transition-all ${
-                          index === 0
-                            ? "bg-leaf-500 text-white shadow-lg shadow-leaf-500/25 hover:bg-leaf-600"
-                            : "border border-leaf-200 bg-white text-leaf-700 hover:border-leaf-400 hover:bg-leaf-50"
-                        }`}
-                      >
-                        Be om tilbud
-                      </a>
+                      <div className="mt-auto pt-6">
+                        <a
+                          href="#kontakt"
+                          onClick={() => handleSendToForm(model)}
+                          className={`block rounded-full px-5 py-3 text-center text-sm font-semibold transition-all ${
+                            index === 0
+                              ? "bg-leaf-500 text-white shadow-lg shadow-leaf-500/25 hover:bg-leaf-600"
+                              : "border border-leaf-200 bg-white text-leaf-700 hover:border-leaf-400 hover:bg-leaf-50"
+                          }`}
+                        >
+                          Be om tilbud
+                        </a>
+                      </div>
                     </article>
                   ))}
                 </div>
