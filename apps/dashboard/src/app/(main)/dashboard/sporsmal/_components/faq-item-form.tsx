@@ -58,9 +58,12 @@ export function FaqItemForm({ item }: { readonly item: FaqItem | null }) {
               id="category"
               name="category"
               defaultValue={item?.category ?? ""}
-              placeholder="Installasjon, pris, service …"
+              placeholder="installasjon, pris, drift …"
             />
-            <FieldDescription>Valgfritt – brukes til å gruppere spørsmålene.</FieldDescription>
+            <FieldDescription>
+              Valgfritt. Kategoriene <code>pris</code>, <code>modell</code>, <code>feilsoking</code> og{" "}
+              <code>dekning</code> gir svaret en lenke videre til riktig del av nettsiden.
+            </FieldDescription>
           </Field>
           <Field className="gap-1.5">
             <FieldLabel htmlFor="order">Rekkefølge</FieldLabel>

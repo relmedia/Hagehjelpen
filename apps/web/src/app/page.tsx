@@ -15,6 +15,7 @@ import { Booking } from "@/components/Booking";
 import { Cta } from "@/components/Cta";
 import { Footer } from "@/components/Footer";
 import { getCoverageAreas } from "@/lib/coverage";
+import { getFaqItems } from "@/lib/faq";
 import { getMowerModels } from "@/lib/mowers";
 import { getPricePlans } from "@/lib/prices";
 import { getTestimonials } from "@/lib/testimonials";
@@ -24,11 +25,12 @@ import { getTestimonials } from "@/lib/testimonials";
 export const revalidate = 600;
 
 export default async function Home() {
-  const [mowers, pricePlans, coverageAreas, testimonials] = await Promise.all([
+  const [mowers, pricePlans, coverageAreas, testimonials, faqItems] = await Promise.all([
     getMowerModels(),
     getPricePlans(),
     getCoverageAreas(),
     getTestimonials(),
+    getFaqItems(),
   ]);
 
   return (
@@ -46,7 +48,7 @@ export default async function Home() {
         <Feilsoking />
         <Testimonials items={testimonials} />
         <Stats />
-        <Faq />
+        <Faq items={faqItems} />
         <Booking />
         <Cta />
       </main>
