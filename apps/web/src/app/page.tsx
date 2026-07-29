@@ -24,10 +24,11 @@ import { getTestimonials } from "@/lib/testimonials";
 export const revalidate = 600;
 
 export default async function Home() {
-  const [mowers, pricePlans, coverageAreas] = await Promise.all([
+  const [mowers, pricePlans, coverageAreas, testimonials] = await Promise.all([
     getMowerModels(),
     getPricePlans(),
     getCoverageAreas(),
+    getTestimonials(),
   ]);
 
   return (
@@ -43,7 +44,7 @@ export default async function Home() {
         <MowerAdvisor models={mowers} />
         <Checklist />
         <Feilsoking />
-        <Testimonials />
+        <Testimonials items={testimonials} />
         <Stats />
         <Faq />
         <Booking />
