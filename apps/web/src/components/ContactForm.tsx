@@ -13,6 +13,7 @@ import {
   CONTACT_PREFILL_KEY,
   type ContactPrefill,
 } from "@/lib/contact-prefill";
+import { trackAction } from "@/lib/track";
 
 const SERVICES = [
   { value: "installasjon", label: "Installasjon" },
@@ -197,6 +198,7 @@ export function ContactForm() {
       }
 
       setStatus("success");
+      trackAction("skjema-sendt");
       setForm(INITIAL);
       setFiles([]);
     } catch {

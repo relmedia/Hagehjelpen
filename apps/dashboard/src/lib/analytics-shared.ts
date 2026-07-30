@@ -18,16 +18,57 @@ export type KpiDatum = {
   periodLabel: string;
 };
 
-export type TopPageRow = {
-  path: string;
-  views: number;
-  visitors: number;
-  share: number; // fraction of all pageviews
-};
-
 export type SourceRow = {
   source: string;
   visitors: number;
+};
+
+/** Én seksjon på forsiden, eller ett verktøy som ble brukt. */
+export type EngagementRow = {
+  label: string;
+  visitors: number;
+  /** Andel av besøkende i perioden som kom hit / gjorde dette. */
+  share: number;
+};
+
+/** Ankere på forsiden, i den rekkefølgen de står. Kortet leses da som en trakt:
+ *  hvor mange faller av før prisene, kalkulatoren og kontaktskjemaet. */
+export const SECTION_ORDER = [
+  "fordeler",
+  "slik-fungerer-det",
+  "installasjon",
+  "kalkulator",
+  "velg-klipper",
+  "huskeliste",
+  "feilsoking",
+  "omtaler",
+  "faq",
+  "befaring",
+  "kontakt",
+] as const;
+
+export const SECTION_LABELS: Record<string, string> = {
+  fordeler: "Fordeler",
+  "slik-fungerer-det": "Slik fungerer det",
+  installasjon: "Priser",
+  kalkulator: "Prisberegner",
+  "velg-klipper": "Velg klipper",
+  huskeliste: "Huskeliste",
+  feilsoking: "Feilsøking",
+  omtaler: "Kundeomtaler",
+  faq: "Spørsmål og svar",
+  befaring: "Book befaring",
+  kontakt: "Kontaktskjema",
+};
+
+export const ACTION_LABELS: Record<string, string> = {
+  kalkulator: "Brukte prisberegneren",
+  plenmaling: "Målte opp plenen i kartet",
+  "estimat-til-skjema": "Sendte estimat til skjemaet",
+  dekningssjekk: "Sjekket postnummer",
+  produktvelger: "Brukte produktvelgeren",
+  "skjema-sendt": "Sendte kontaktskjemaet",
+  telefon: "Trykket på telefonnummeret",
 };
 
 export type DailyPoint = {
@@ -57,7 +98,8 @@ export type CityRow = {
 export type AnalyticsData = {
   kpis: KpiDatum[];
   daily: DailyPoint[];
-  topPages: TopPageRow[];
+  sections: EngagementRow[];
+  actions: EngagementRow[];
   sources: SourceRow[];
   referrers: SourceRow[];
   countries: CountryRow[];

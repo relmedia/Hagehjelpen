@@ -1,21 +1,24 @@
 import {
+  ACTION_LABELS,
   type AnalyticsData,
   type AnalyticsRange,
   type CityRow,
   type CountryRow,
   type DailyPoint,
+  type EngagementRow,
   type KpiDatum,
   RANGE_LABELS,
   type RealtimePoint,
+  SECTION_LABELS,
+  SECTION_ORDER,
   type SourceRow,
-  type TopPageRow,
   formatCount,
 } from "@/lib/analytics-shared";
 import { createClient } from "@/lib/supabase/server";
 
 type SummaryRow = { pageviews: number; visitors: number; sessions: number; engaged_sessions: number };
 type DailyRow = { day: string; pageviews: number; visitors: number };
-type TopPageRpcRow = { path: string; views: number; visitors: number };
+type EngagementRpcRow = { label: string; sessions: number; visitors: number };
 type ReferrerRow = { referrer: string | null; visitors: number; views: number };
 type RealtimeRow = { minute: string; visitors: number };
 type CountryRpcRow = { country: string; visitors: number; views: number };
@@ -32,6 +35,18 @@ function countryDisplayName(code: string): string {
 }
 
 const EMPTY_SUMMARY: SummaryRow = { pageviews: 0, visitors: 0, sessions: 0, engaged_sessions: 0 };
+
+type RpcResult = { data: unknown; error: { message: string } | null };
+
+/** Tomme kort er lovlig (ingen trafikk ennå), men en manglende funksjon eller
+ *  rettighet skal ikke se ut som ekte nuller. Kjør supabase/analytics.sql. */
+function rows<T>(name: string, result: RpcResult): T[] {
+  if (result.error) {
+    console.error(`Analytics: ${name} feilet – ${result.error.message}`);
+    return [];
+  }
+  return (result.data ?? []) as T[];
+}
 
 const SEARCH_PATTERN = /google|bing|duckduckgo|ecosia|yahoo|qwant|startpage/i;
 const SOCIAL_PATTERN =
@@ -128,7 +143,8 @@ export async function getAnalytics(range: AnalyticsRange): Promise<AnalyticsData
     summaryRes,
     prevSummaryRes,
     dailyRes,
-    topPagesRes,
+    sectionsRes,
+    actionsRes,
     referrersRes,
     realtimeRes,
     realtimeSummaryRes,
@@ -158,15 +174,15 @@ export async function getAnalytics(range: AnalyticsRange): Promise<AnalyticsData
       .lt("created_at", prevTo.toISOString()),
   ]);
 
-  const summary = ((summaryRes.data as SummaryRow[] | null)?.[0] ?? EMPTY_SUMMARY) as SummaryRow;
-  const prevSummary = ((prevSummaryRes.data as SummaryRow[] | null)?.[0] ?? EMPTY_SUMMARY) as SummaryRow;
-  const dailyRows = (dailyRes.data ?? []) as DailyRow[];
-  const topPageRows = (topPagesRes.data ?? []) as TopPageRpcRow[];
-  const referrerRows = (referrersRes.data ?? []) as ReferrerRow[];
-  const realtimeRows = (realtimeRes.data ?? []) as RealtimeRow[];
-  const realtimeSummary = ((realtimeSummaryRes.data as SummaryRow[] | null)?.[0] ?? EMPTY_SUMMARY) as SummaryRow;
-  const countryRows = (countriesRes.data ?? []) as CountryRpcRow[];
-  const cityRows = (citiesRes.data ?? []) as CityRpcRow[];
+  const summary = rows<SummaryRow>("analytics_summary", summaryRes)[0] ?? EMPTY_SUMMARY;
+  const prevSummary = rows<SummaryRow>("analytics_summary (forrige periode)", prevSummaryRes)[0] ?? EMPTY_SUMMARY;
+  const dailyRows = rows<DailyRow>("analytics_daily", dailyRes);
+  const topPageRows = rows<TopPageRpcRow>("analytics_top_pages", topPagesRes);
+  const referrerRows = rows<ReferrerRow>("analytics_referrers", referrersRes);
+  const realtimeRows = rows<RealtimeRow>("analytics_realtime", realtimeRes);
+  const realtimeSummary = rows<SummaryRow>("analytics_summary (sanntid)", realtimeSummaryRes)[0] ?? EMPTY_SUMMARY;
+  const countryRows = rows<CountryRpcRow>("analytics_countries", countriesRes);
+  const cityRows = rows<CityRpcRow>("analytics_cities", citiesRes);
 
   const leadCount = leadsRes.count ?? 0;
   const prevLeadCount = prevLeadsRes.count ?? 0;

@@ -37,10 +37,20 @@ NEXT_PUBLIC_SITE_URL=https://hagehjelpen.no
    Alle kan kjøres flere ganger. Bilde per modell laster du opp i
    `/dashboard/klippere/<id>`.
 
-Analytics-kortene på forsiden bruker RPC-funksjonene `analytics_summary`,
-`analytics_daily`, `analytics_top_pages`, `analytics_referrers`,
-`analytics_realtime`, `analytics_countries` og `analytics_cities`. Uten disse
-viser dashbordet nuller, resten av panelet fungerer som normalt.
+### Trafikkstatistikk
+
+Kjør `supabase/analytics.sql`. Den lager tabellen `page_views` og de sju
+funksjonene dashbordet leser (`analytics_summary`, `analytics_daily`,
+`analytics_top_pages`, `analytics_referrers`, `analytics_realtime`,
+`analytics_countries` og `analytics_cities`). Uten den viser kortene nuller, og
+årsaken logges i serverloggen; resten av panelet fungerer som normalt.
+
+Tallene samles inn av nettsiden selv: `apps/web` sender én sidevisning per rute
+til `/api/track`, og ett signal når besøkende har vært på siden i 10 sekunder.
+Det brukes ingen informasjonskapsler – besøkende identifiseres med en hash av
+IP, nettleser og dato som byttes hvert døgn. Land og by kommer fra Vercel sine
+geo-headere og er derfor tomme lokalt. Sett `ANALYTICS_SALT` i `apps/web` i
+produksjon.
 
 ## Ruter
 
@@ -79,6 +89,7 @@ src/
   types/                           content, booking, lead
   navigation/sidebar/              menyen
 supabase/schema.sql                tabeller og RLS
+supabase/analytics.sql             page_views + funksjonene bak trafikkortene
 supabase/seed-mowers.sql           robotklipperne fra forsiden
 supabase/seed-price-tiers.sql      prisnivåene fra forsiden
 supabase/seed-coverage-areas.sql   dekningsområdene fra forsiden

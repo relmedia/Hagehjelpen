@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { lawnSizeFromArea, sendContactPrefill } from "@/lib/contact-prefill";
 import type { MowerModel, Terrain } from "@/lib/mowers";
+import { trackAction } from "@/lib/track";
 
 const TERRAIN_OPTIONS: {
   value: Terrain;
@@ -112,7 +113,10 @@ export function MowerAdvisor({ models }: { models: MowerModel[] }) {
                 max={5000}
                 step={100}
                 value={area}
-                onChange={(e) => setArea(Number(e.target.value))}
+                onChange={(e) => {
+                  trackAction("produktvelger");
+                  setArea(Number(e.target.value));
+                }}
                 className="mt-4 h-2 w-full cursor-pointer appearance-none rounded-full bg-leaf-100 accent-leaf-500 outline-none focus-visible:ring-2 focus-visible:ring-leaf-400/40"
               />
               <div className="mt-2 flex justify-between text-xs text-ink-soft/70">
@@ -140,7 +144,10 @@ export function MowerAdvisor({ models }: { models: MowerModel[] }) {
                       name="terrain"
                       value={option.value}
                       checked={terrain === option.value}
-                      onChange={() => setTerrain(option.value)}
+                      onChange={() => {
+                        trackAction("produktvelger");
+                        setTerrain(option.value);
+                      }}
                       className="sr-only"
                     />
                     <span className="block text-sm font-semibold">{option.label}</span>

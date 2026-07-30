@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { lawnSizeFromArea, sendContactPrefill } from "@/lib/contact-prefill";
 import type { CoverageArea } from "@/lib/coverage";
+import { trackAction } from "@/lib/track";
 import { CoverageCheck } from "./CoverageCheck";
 import { LawnMeasure, type MeasureResult } from "./LawnMeasure";
 import { AddressSearch } from "./AddressSearch";
@@ -90,6 +91,7 @@ export function LawnCalculator({ coverageAreas }: { coverageAreas: CoverageArea[
     distanceKm,
     address: measuredAddress,
   }: MeasureResult) {
+    trackAction("plenmaling");
     setArea(measured);
     if (distanceKm !== undefined) {
       setDistance(Math.min(distanceKm, MAX_DISTANCE));
@@ -100,6 +102,7 @@ export function LawnCalculator({ coverageAreas }: { coverageAreas: CoverageArea[
   }
 
   function handleSendToForm() {
+    trackAction("estimat-til-skjema");
     sendContactPrefill({
       service: "installasjon",
       lawnSize: lawnSizeFromArea(area),
@@ -148,7 +151,10 @@ export function LawnCalculator({ coverageAreas }: { coverageAreas: CoverageArea[
                   max={MAX_AREA}
                   step={50}
                   value={area}
-                  onChange={(e) => setArea(Number(e.target.value))}
+                  onChange={(e) => {
+                    trackAction("kalkulator");
+                    setArea(Number(e.target.value));
+                  }}
                   className={`mt-4 ${sliderClass}`}
                 />
                 <div className="mt-2 flex justify-between text-xs text-ink-soft/70">
@@ -175,7 +181,10 @@ export function LawnCalculator({ coverageAreas }: { coverageAreas: CoverageArea[
                   max={10}
                   step={1}
                   value={islands}
-                  onChange={(e) => setIslands(Number(e.target.value))}
+                  onChange={(e) => {
+                    trackAction("kalkulator");
+                    setIslands(Number(e.target.value));
+                  }}
                   className={`mt-4 ${sliderClass}`}
                 />
                 <p className="mt-2 text-xs text-ink-soft/70">
@@ -199,7 +208,10 @@ export function LawnCalculator({ coverageAreas }: { coverageAreas: CoverageArea[
                   max={MAX_DISTANCE}
                   step={1}
                   value={distance}
-                  onChange={(e) => setDistance(Number(e.target.value))}
+                  onChange={(e) => {
+                    trackAction("kalkulator");
+                    setDistance(Number(e.target.value));
+                  }}
                   className={`mt-4 ${sliderClass}`}
                 />
                 <AddressSearch

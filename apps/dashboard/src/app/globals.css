@@ -91,6 +91,20 @@ These serve as the fallback; there is no separate default.css file. */
   --font-mono: var(--font-geist-mono);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+
+  /* toasts, tinted per type so a save and a failure are told apart at a glance */
+  --toast-success: oklch(0.97 0.03 155);
+  --toast-success-foreground: oklch(0.4 0.09 155);
+  --toast-success-border: oklch(0.87 0.07 155);
+  --toast-error: oklch(0.97 0.02 25);
+  --toast-error-foreground: oklch(0.45 0.16 27);
+  --toast-error-border: oklch(0.88 0.06 25);
+  --toast-warning: oklch(0.97 0.04 90);
+  --toast-warning-foreground: oklch(0.45 0.1 75);
+  --toast-warning-border: oklch(0.88 0.08 90);
+  --toast-info: oklch(0.97 0.02 250);
+  --toast-info-foreground: oklch(0.43 0.11 255);
+  --toast-info-border: oklch(0.88 0.05 250);
 }
 
 .dark {
@@ -125,6 +139,46 @@ These serve as the fallback; there is no separate default.css file. */
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --toast-success: oklch(0.27 0.05 155);
+  --toast-success-foreground: oklch(0.89 0.09 155);
+  --toast-success-border: oklch(0.37 0.06 155);
+  --toast-error: oklch(0.27 0.07 25);
+  --toast-error-foreground: oklch(0.89 0.08 25);
+  --toast-error-border: oklch(0.38 0.09 25);
+  --toast-warning: oklch(0.28 0.05 85);
+  --toast-warning-foreground: oklch(0.9 0.09 90);
+  --toast-warning-border: oklch(0.38 0.07 85);
+  --toast-info: oklch(0.27 0.05 255);
+  --toast-info-foreground: oklch(0.89 0.07 255);
+  --toast-info-border: oklch(0.38 0.06 255);
+}
+
+/* Sonner paints the toast from --normal-bg/-text/-border on the toast element,
+   so overriding those per type is enough – no specificity battle with its own
+   stylesheet, which is injected outside our cascade layers. */
+.cn-toast[data-type="success"] {
+  --normal-bg: var(--toast-success);
+  --normal-text: var(--toast-success-foreground);
+  --normal-border: var(--toast-success-border);
+}
+
+.cn-toast[data-type="error"] {
+  --normal-bg: var(--toast-error);
+  --normal-text: var(--toast-error-foreground);
+  --normal-border: var(--toast-error-border);
+}
+
+.cn-toast[data-type="warning"] {
+  --normal-bg: var(--toast-warning);
+  --normal-text: var(--toast-warning-foreground);
+  --normal-border: var(--toast-warning-border);
+}
+
+.cn-toast[data-type="info"] {
+  --normal-bg: var(--toast-info);
+  --normal-text: var(--toast-info-foreground);
+  --normal-border: var(--toast-info-border);
 }
 
 @layer base {

@@ -3,6 +3,7 @@
 import { FormEvent, useRef, useState } from "react";
 import { sendContactPrefill } from "@/lib/contact-prefill";
 import type { CoverageArea, Zone } from "@/lib/coverage";
+import { trackAction } from "@/lib/track";
 import { CoverageMap } from "./CoverageMap";
 
 const ZONE_STYLES: Record<Zone, { card: string; dot: string; title: string }> = {
@@ -61,6 +62,7 @@ export function CoverageCheck({ areas }: { areas: CoverageArea[] }) {
     const code = Number(digits);
     const area = areas.find((item) => code >= item.from && code <= item.to);
     setError("");
+    trackAction("dekningssjekk");
     setResult({
       code: digits,
       name: area?.name,
