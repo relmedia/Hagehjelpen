@@ -85,9 +85,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
             rows={analytics.actions}
           />
         </div>
+        <div className="xl:col-span-5 xl:col-start-8">
+          <TopLocations countries={analytics.countries} cities={analytics.cities} />
+        </div>
       </div>
-
-      <TopLocations countries={analytics.countries} cities={analytics.cities} />
     </div>
   );
 }

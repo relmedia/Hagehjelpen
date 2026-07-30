@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CityRow, CountryRow } from "@/lib/analytics-shared";
 import { formatCount } from "@/lib/analytics-shared";
 
@@ -54,6 +55,7 @@ function CityList({ cities }: { cities: CityRow[] }) {
   );
 }
 
+// Byer først: vi jobber på Nord-Jæren, så landlisten er stort sett bare Norge.
 export function TopLocations({ countries, cities }: { countries: CountryRow[]; cities: CityRow[] }) {
   return (
     <Card className="h-full gap-2">
@@ -61,17 +63,25 @@ export function TopLocations({ countries, cities }: { countries: CountryRow[]; c
         <CardTitle className="font-normal">Geografi</CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <h3 className="mb-1 text-muted-foreground text-xs uppercase tracking-wider">Land</h3>
-            <CountryList countries={countries} />
-          </div>
-          <div>
-            <h3 className="mb-1 text-muted-foreground text-xs uppercase tracking-wider">Byer</h3>
+      <CardContent className="px-0">
+        <Tabs defaultValue="cities" className="flex flex-col gap-3">
+          <TabsList className="w-full justify-start border-b px-2.5" variant="line">
+            <TabsTrigger className="flex-none font-normal" value="cities">
+              Byer
+            </TabsTrigger>
+            <TabsTrigger className="flex-none font-normal" value="countries">
+              Land
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="cities" className="px-4">
             <CityList cities={cities} />
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="countries" className="px-4">
+            <CountryList countries={countries} />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
