@@ -156,7 +156,8 @@ export async function getAnalytics(range: AnalyticsRange): Promise<AnalyticsData
     supabase.rpc("analytics_summary", { from_ts: from.toISOString(), to_ts: to.toISOString() }),
     supabase.rpc("analytics_summary", { from_ts: prevFrom.toISOString(), to_ts: prevTo.toISOString() }),
     supabase.rpc("analytics_daily", { from_ts: from.toISOString(), to_ts: to.toISOString() }),
-    supabase.rpc("analytics_top_pages", { from_ts: from.toISOString(), to_ts: to.toISOString(), max_rows: 6 }),
+    supabase.rpc("analytics_sections", { from_ts: from.toISOString(), to_ts: to.toISOString(), max_rows: 20 }),
+    supabase.rpc("analytics_actions", { from_ts: from.toISOString(), to_ts: to.toISOString(), max_rows: 20 }),
     supabase.rpc("analytics_referrers", { from_ts: from.toISOString(), to_ts: to.toISOString() }),
     supabase.rpc("analytics_realtime", { window_minutes: REALTIME_WINDOW }),
     supabase.rpc("analytics_summary", { from_ts: realtimeFrom.toISOString(), to_ts: to.toISOString() }),
@@ -177,7 +178,8 @@ export async function getAnalytics(range: AnalyticsRange): Promise<AnalyticsData
   const summary = rows<SummaryRow>("analytics_summary", summaryRes)[0] ?? EMPTY_SUMMARY;
   const prevSummary = rows<SummaryRow>("analytics_summary (forrige periode)", prevSummaryRes)[0] ?? EMPTY_SUMMARY;
   const dailyRows = rows<DailyRow>("analytics_daily", dailyRes);
-  const topPageRows = rows<TopPageRpcRow>("analytics_top_pages", topPagesRes);
+  const sectionRows = rows<EngagementRpcRow>("analytics_sections", sectionsRes);
+  const actionRows = rows<EngagementRpcRow>("analytics_actions", actionsRes);
   const referrerRows = rows<ReferrerRow>("analytics_referrers", referrersRes);
   const realtimeRows = rows<RealtimeRow>("analytics_realtime", realtimeRes);
   const realtimeSummary = rows<SummaryRow>("analytics_summary (sanntid)", realtimeSummaryRes)[0] ?? EMPTY_SUMMARY;
@@ -230,11 +232,20 @@ export async function getAnalytics(range: AnalyticsRange): Promise<AnalyticsData
     },
   ];
 
-  const topPages: TopPageRow[] = topPageRows.map((row) => ({
-    path: row.path,
-    views: row.views,
+  // Andelen regnes mot alle besøkende i perioden, så «60 %» betyr at seks av ti
+  // faktisk kom så langt ned på siden.
+  const share = (visitors: number) => (summary.visitors > 0 ? visitors / summary.visitors : 0);
+
+  const sectionByLabel = new Map(sectionRows.map((row) => [row.label, row]));
+  const sections: EngagementRow[] = SECTION_ORDER.filter((key) => sectionByLabel.has(key)).map((key) => {
+    const row = sectionByLabel.get(key) as EngagementRpcRow;
+    return { label: SECTION_LABELS[key] ?? key, visitors: row.visitors, share: share(row.visitors) };
+  });
+
+  const actions: EngagementRow[] = actionRows.map((row) => ({
+    label: ACTION_LABELS[row.label] ?? row.label,
     visitors: row.visitors,
-    share: summary.pageviews > 0 ? row.views / summary.pageviews : 0,
+    share: share(row.visitors),
   }));
 
   const referrers: SourceRow[] = referrerRows
@@ -259,7 +270,8 @@ export async function getAnalytics(range: AnalyticsRange): Promise<AnalyticsData
   return {
     kpis,
     daily: fillDailySeries(dailyRows, from, to),
-    topPages,
+    sections,
+    actions,
     sources: categorizeSources(referrerRows),
     referrers,
     countries,

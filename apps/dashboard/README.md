@@ -39,14 +39,24 @@ NEXT_PUBLIC_SITE_URL=https://hagehjelpen.no
 
 ### Trafikkstatistikk
 
-Kjør `supabase/analytics.sql`. Den lager tabellen `page_views` og de sju
-funksjonene dashbordet leser (`analytics_summary`, `analytics_daily`,
-`analytics_top_pages`, `analytics_referrers`, `analytics_realtime`,
-`analytics_countries` og `analytics_cities`). Uten den viser kortene nuller, og
+Kjør `supabase/analytics.sql`. Den lager tabellen `page_views` og funksjonene
+dashbordet leser (`analytics_summary`, `analytics_daily`, `analytics_sections`,
+`analytics_actions`, `analytics_referrers`, `analytics_realtime`,
+`analytics_countries` og `analytics_cities`). Filen kan kjøres på nytt når som
+helst – den legger til det som mangler. Uten den viser kortene nuller, og
 årsaken logges i serverloggen; resten av panelet fungerer som normalt.
 
+Nettsiden er én lang forside, så «mest besøkte sider» ville alltid vist `/`.
+I stedet måler vi to ting til: hvilke seksjoner besøkende faktisk kommer ned til
+(`analytics_sections`, ankrene i `SECTION_ORDER`) og hvilke verktøy de bruker
+(`analytics_actions` – prisberegner, plenoppmåling, dekningssjekk,
+produktvelger, skjema sendt, telefon trykket). Begge telles én gang per økt.
+Norske navn på seksjoner og handlinger ligger i `src/lib/analytics-shared.ts`;
+legger du til en ny seksjon på nettsiden, legg ankeret inn der.
+
 Tallene samles inn av nettsiden selv: `apps/web` sender én sidevisning per rute
-til `/api/track`, og ett signal når besøkende har vært på siden i 10 sekunder.
+til `/api/track`, ett signal når besøkende har vært på siden i 10 sekunder, og
+ett per seksjon og verktøy (`src/lib/track.ts`).
 Det brukes ingen informasjonskapsler – besøkende identifiseres med en hash av
 IP, nettleser og dato som byttes hvert døgn. Land og by kommer fra Vercel sine
 geo-headere og er derfor tomme lokalt. Sett `ANALYTICS_SALT` i `apps/web` i

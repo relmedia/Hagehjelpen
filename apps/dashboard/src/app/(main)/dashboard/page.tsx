@@ -4,9 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 
 import { AnalyticsKpiStrip } from "./_components/analytics-kpi-strip";
 import { AnalyticsToolbar } from "./_components/analytics-toolbar";
+import { EngagementCard } from "./_components/engagement-card";
 import { RealtimeVisitors } from "./_components/realtime-visitors";
 import { TopLocations } from "./_components/top-locations";
-import { TopPages } from "./_components/top-pages";
 import { TopTrafficSources } from "./_components/top-traffic-sources";
 import { TrafficChart } from "./_components/traffic-chart";
 
@@ -64,10 +64,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
 
       <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12">
         <div className="xl:col-span-7">
-          <TopPages pages={analytics.topPages} />
+          <EngagementCard
+            title="Hvor langt kommer de?"
+            description="Andel av besøkende som fikk se hver seksjon på forsiden, i rekkefølge."
+            emptyText="Ingen seksjoner registrert i perioden ennå."
+            rows={analytics.sections}
+          />
         </div>
         <div className="xl:col-span-5 xl:col-start-8">
           <TopTrafficSources sources={sourcesChartData} referrers={referrersChartData} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12">
+        <div className="xl:col-span-7">
+          <EngagementCard
+            title="Bruk av verktøyene"
+            description="Besøkende som prøvde prisberegneren, dekningssjekken, produktvelgeren eller skjemaet."
+            emptyText="Ingen har brukt verktøyene i perioden ennå."
+            rows={analytics.actions}
+          />
         </div>
       </div>
 
