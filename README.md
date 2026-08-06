@@ -66,3 +66,14 @@ adresse som svaradresse og bildene som vedlegg, og en kvittering til kunden.
 Logoen i toppen av malene hentes fra `NEXT_PUBLIC_SITE_URL` + `/logo-email.png`,
 siden e-postklienter ikke viser SVG. Endrer du `public/logo.svg`, kjør
 `pnpm --filter web generate:email-logo` for å lage PNG-en på nytt.
+
+## Robotsjekk
+
+Kontaktskjemaet beskyttes av Cloudflare Turnstile. Nøklene ligger i
+`apps/web/.env.local` som `NEXT_PUBLIC_TURNSTILE_SITE_KEY` og
+`TURNSTILE_SECRET_KEY`, og må også settes i Vercel for produksjon. Husk å legge
+inn domenet under Turnstile i Cloudflare-dashbordet.
+
+Begge nøklene er valgfrie: uten sitekey vises ingen widget, og uten hemmelig
+nøkkel hopper serveren over verifiseringen. Da oppfører skjemaet seg som før.
+Lokalt brukes Cloudflares testnøkler, som alltid godkjenner.

@@ -81,11 +81,14 @@ export function Header() {
           }`}
         >
           <a
-            href="#"
+            href="/"
             onClick={(event) => {
               event.preventDefault();
               setMenuOpen(false);
               setMoreOpen(false);
+              // Uten dette blir hashen fra forrige seksjon liggende i URL-en,
+              // og nettleseren tror toppen hører til den seksjonen ved reload.
+              window.history.replaceState(null, "", window.location.pathname);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             className="flex shrink-0 items-center gap-3"
