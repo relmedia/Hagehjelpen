@@ -109,6 +109,10 @@ supabase/seed-faq-items.sql        spørsmål og svar fra forsiden
 
 ## E-post
 
-Transaksjonell e-post sendes via Resend med maler i `src/lib/email.ts`.
-API-nøkkel og avsender settes i `/dashboard/innstillinger/e-post`, der du også
-kan sende en testmelding.
+Transaksjonell e-post sendes via Resend. Malene ligger i den delte pakken
+`packages/email`, som forsiden bruker for kontaktskjemaet, slik at alt vi sender
+har samme profil. `src/lib/email.ts` re-eksporterer dem.
+
+API-nøkkel, avsender og mottaker settes i `/dashboard/innstillinger/e-post`, der
+du også kan sende en testmelding. Forsiden leser de samme verdiene, så nøkkelen
+skal bare vedlikeholdes her.

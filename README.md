@@ -6,6 +6,7 @@ Monorepo (Turborepo + pnpm) for Hagehjelpen – salg og installasjon av elektris
 
 - `apps/web` – Forsiden (Next.js App Router, Tailwind CSS v4, GSAP ScrollTrigger)
 - `apps/dashboard` – Adminpanel (Next.js, shadcn/ui, Supabase). Se `apps/dashboard/README.md`
+- `packages/email` – Felles e-postmaler i Hagehjelpen-profilen, brukt av begge appene
 
 ## Kom i gang
 
@@ -47,3 +48,21 @@ automower-312v           automower-310e-nera    automower-430v-nera
 Bruk Husqvarnas egne produktbilder fra forhandlerportalen – de er ryddet for
 rettigheter og har transparent bakgrunn, som passer kortene. Kort uten bilde
 viser bare tekst, så det er trygt å legge inn bildene etter hvert.
+
+## E-post
+
+Alle utgående e-poster bruker malene i `packages/email`, slik at forsiden og
+dashbordet ser like ut. Resend-nøkkel, avsender og mottaker settes ett sted:
+`/dashboard/innstillinger/e-post`.
+
+Kontaktskjemaet på forsiden trenger `SUPABASE_SECRET_KEY` i `apps/web/.env.local`
+for å lese det oppsettet og lagre henvendelsen under «Henvendelser». Mangler
+nøkkelen, faller den tilbake på `RESEND_API_KEY`, `CONTACT_FROM` og `CONTACT_TO`
+fra miljøvariabler – og uten dem igjen åpnes kundens egen e-postklient.
+
+En innsending gir tre ting: en rad i `leads`, et varsel til oss med kundens
+adresse som svaradresse og bildene som vedlegg, og en kvittering til kunden.
+
+Logoen i toppen av malene hentes fra `NEXT_PUBLIC_SITE_URL` + `/logo-email.png`,
+siden e-postklienter ikke viser SVG. Endrer du `public/logo.svg`, kjør
+`pnpm --filter web generate:email-logo` for å lage PNG-en på nytt.

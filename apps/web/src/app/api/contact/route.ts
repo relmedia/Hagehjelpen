@@ -1,5 +1,17 @@
 import { NextResponse } from "next/server";
 
+import {
+  buildLeadNotificationEmail,
+  buildLeadReceiptEmail,
+  LAWN_SIZE_LABELS,
+  MOWER_LABELS,
+  SERVICE_LABELS,
+  type LeadEmailDetails,
+} from "@repo/email";
+
+import { saveLead } from "@/lib/leads";
+import { getMailContext, type MailAttachment, sendEmail } from "@/lib/mail";
+
 export type ContactPayload = {
   name: string;
   email: string;
@@ -10,47 +22,19 @@ export type ContactPayload = {
   message: string;
 };
 
-type Attachment = {
-  filename: string;
-  content: string;
-};
-
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-const SERVICE_LABELS: Record<string, string> = {
-  installasjon: "Installasjon av robotgressklipper",
-  befaring: "Befaring av hagen",
-  feilsoking: "Feilsøking / service",
-  usikker: "Usikker – trenger rådgivning",
-};
-
-const LAWN_LABELS: Record<string, string> = {
-  "0-1000": "0–1000 m²",
-  "1000-2000": "1000–2000 m²",
-  "2000-plus": "2000 m² og oppover",
-  ukjent: "Vet ikke",
-};
-
-const MOWER_LABELS: Record<string, string> = {
-  husqvarna: "Husqvarna Automower",
-  gardena: "Gardena",
-  worx: "Worx Landroid",
-  ambrogio: "Ambrogio",
-  segway: "Segway Navimow",
-  annet: "Annet / vet ikke",
-  ingen: "Har ikke robotgressklipper ennå",
-};
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function orMissing(value: string) {
-  return value || "Ikke oppgitt";
+function label(labels: Record<string, string>, value: string) {
+  return labels[value] || value || "Ikke oppgitt";
 }
 
-function buildEmailBody(data: ContactPayload, imageNote: string) {
+// Brukes bare når Resend ikke er satt opp: da åpner vi kundens e-postklient.
+function buildMailtoBody(data: ContactPayload, imageNote: string) {
   return [
     "Ny henvendelse fra hagehjelpen.no",
     "",
@@ -58,9 +42,9 @@ function buildEmailBody(data: ContactPayload, imageNote: string) {
     `E-post: ${data.email}`,
     `Telefon: ${data.phone}`,
     "",
-    `Tjeneste: ${SERVICE_LABELS[data.service] ?? data.service}`,
-    `Plenstørrelse: ${LAWN_LABELS[data.lawnSize] ?? orMissing(data.lawnSize)}`,
-    `Robotgressklipper: ${MOWER_LABELS[data.mower] ?? orMissing(data.mower)}`,
+    `Tjeneste: ${label(SERVICE_LABELS, data.service)}`,
+    `Plenstørrelse: ${label(LAWN_SIZE_LABELS, data.lawnSize)}`,
+    `Robotgressklipper: ${label(MOWER_LABELS, data.mower)}`,
     ...(imageNote ? ["", imageNote] : []),
     "",
     "Melding:",
@@ -103,7 +87,7 @@ async function readRequest(
   };
 }
 
-async function toAttachments(images: File[]): Promise<Attachment[]> {
+async function toAttachments(images: File[]): Promise<MailAttachment[]> {
   return Promise.all(
     images.map(async (file, index) => ({
       filename: file.name || `hagebilde-${index + 1}.jpg`,
@@ -159,52 +143,52 @@ export async function POST(request: Request) {
     );
   }
 
-  const resendKey = process.env.RESEND_API_KEY;
-  const contactTo = process.env.CONTACT_TO ?? "post@hagehjelpen.no";
-  const subject = `Henvendelse: ${SERVICE_LABELS[data.service] ?? data.service}`;
+  const lead: LeadEmailDetails = {
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    service: data.service,
+    lawnSize: data.lawnSize,
+    mower: data.mower,
+    message: data.message,
+    imageCount: images.length,
+  };
 
-  if (resendKey) {
-    const imageNote =
+  const { config, brand } = await getMailContext();
+
+  // Henvendelsen skal ligge i dashbordet uansett hvordan e-posten går.
+  await saveLead({ ...lead, source: "kontaktskjema" });
+
+  if (!config) {
+    const mailtoNote =
       images.length > 0
-        ? `Vedlegg: ${images.length} bilde(r) av hagen fra kunden.`
+        ? `Jeg har ${images.length} bilde(r) av hagen – husk å legge dem ved denne e-posten.`
         : "";
+    const mailto = `mailto:post@hagehjelpen.no?subject=${encodeURIComponent(
+      `Henvendelse: ${label(SERVICE_LABELS, data.service)}`,
+    )}&body=${encodeURIComponent(buildMailtoBody(data, mailtoNote))}`;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.CONTACT_FROM ?? "Hagehjelpen <onboarding@resend.dev>",
-        to: [contactTo],
-        reply_to: data.email,
-        subject,
-        text: buildEmailBody(data, imageNote),
-        ...(images.length > 0 ? { attachments: await toAttachments(images) } : {}),
-      }),
-    });
-
-    if (!res.ok) {
-      return NextResponse.json(
-        { error: "Kunne ikke sende henvendelsen. Prøv igjen eller ring oss." },
-        { status: 502 },
-      );
-    }
-
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, mailto });
   }
 
-  // Uten e-postoppsett returnerer vi mailto-lenke som fallback. Vedlegg må da
-  // legges ved manuelt i e-postklienten som åpnes.
-  const mailtoNote =
-    images.length > 0
-      ? `Jeg har ${images.length} bilde(r) av hagen – husk å legge dem ved denne e-posten.`
-      : "";
+  const notification = buildLeadNotificationEmail(brand, lead);
+  const sent = await sendEmail(config, {
+    ...notification,
+    to: config.adminTo,
+    replyTo: data.email,
+    attachments: images.length > 0 ? await toAttachments(images) : undefined,
+  });
 
-  const mailto = `mailto:${contactTo}?subject=${encodeURIComponent(
-    subject,
-  )}&body=${encodeURIComponent(buildEmailBody(data, mailtoNote))}`;
+  if (!sent) {
+    return NextResponse.json(
+      { error: "Kunne ikke sende henvendelsen. Prøv igjen eller ring oss." },
+      { status: 502 },
+    );
+  }
 
-  return NextResponse.json({ ok: true, mailto });
+  // Kvitteringen er en bonus – går den ikke gjennom, har vi likevel fått saken.
+  const receipt = buildLeadReceiptEmail(brand, lead);
+  await sendEmail(config, { ...receipt, to: data.email, replyTo: config.adminTo });
+
+  return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@repo/email"],
   images: {
     remotePatterns: [
       // Bilder lastet opp i dashbordet ligger i Supabase Storage.

@@ -6,11 +6,18 @@ const COLORS = {
   leaf: "#65b427",
   leafDark: "#3b6e1a",
   leafSoft: "#e4f6cf",
+  // Den mørke grønnfargen i logoen, brukt på ordmerket ved siden av den.
+  brand: "#305930",
   ink: "#20261c",
   inkSoft: "#47503f",
+  // Dempet tone og hårstrek til bunnteksten, som skal ligge bak innholdet.
+  faint: "#79836f",
+  hairline: "#edf0e8",
   border: "#e2e8dc",
   canvas: "#f6f8f3",
 };
+
+const SEPARATOR = "&nbsp;&middot;&nbsp;";
 
 export type EmailContact = {
   phone?: string;
@@ -22,6 +29,9 @@ export type EmailContact = {
 export type EmailBrand = {
   siteName: string;
   siteUrl: string;
+  /** Absolutt URL til logoen. E-postklienter viser ikke SVG, så den må være en
+   *  PNG. Er den ikke satt, brukes /logo-email.png på nettstedet. */
+  logoUrl?: string;
   contact?: EmailContact;
 };
 
@@ -95,17 +105,70 @@ function detailTable(title: string | undefined, rows: EmailDetailRow[]): string 
     </table>`;
 }
 
-function contactBlock(contact: EmailContact): string {
-  const lines = [
-    contact.phone ? `Telefon: ${escapeHtml(contact.phone)}` : "",
-    contact.email ? `E-post: ${escapeHtml(contact.email)}` : "",
+function footer(options: EmailOptions): string {
+  const contact = options.contact ?? {};
+  const linkStyle = `color:${COLORS.faint};text-decoration:none;`;
+
+  // Sted og telefon på én linje, kontaktveier på neste. Kortere enn en liste
+  // med etiketter, og lettere å skumme.
+  const details = [
     contact.address ? escapeHtml(contact.address) : "",
-    contact.facebookUrl ? `<a href="${escapeHtml(contact.facebookUrl)}" style="color:${COLORS.leafDark};">Facebook</a>` : "",
+    contact.phone
+      ? `<a href="tel:${escapeHtml(contact.phone.replace(/\s+/g, ""))}" style="${linkStyle}">${escapeHtml(contact.phone)}</a>`
+      : "",
   ].filter(Boolean);
 
-  if (lines.length === 0) return "";
+  const links = [
+    contact.email
+      ? `<a href="mailto:${escapeHtml(contact.email)}" style="${linkStyle}">${escapeHtml(contact.email)}</a>`
+      : "",
+    `<a href="${escapeHtml(options.siteUrl)}" style="${linkStyle}">${escapeHtml(options.siteUrl.replace(/^https?:\/\//, ""))}</a>`,
+    contact.facebookUrl
+      ? `<a href="${escapeHtml(contact.facebookUrl)}" style="${linkStyle}">Facebook</a>`
+      : "",
+  ].filter(Boolean);
 
-  return `<p style="margin:16px 0 0;font-size:13px;line-height:1.7;color:${COLORS.inkSoft};">${lines.join("<br>")}</p>`;
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="height:1px;background:${COLORS.hairline};font-size:0;line-height:0;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:20px 0 0;">
+          <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:${COLORS.ink};">${escapeHtml(options.siteName)}</p>
+          ${
+            details.length
+              ? `<p style="margin:0 0 4px;font-size:13px;line-height:1.7;color:${COLORS.faint};">${details.join(SEPARATOR)}</p>`
+              : ""
+          }
+          <p style="margin:0;font-size:13px;line-height:1.7;color:${COLORS.faint};">${links.join(SEPARATOR)}</p>
+        </td>
+      </tr>
+    </table>`;
+}
+
+// Logo og navn side om side. To celler i stedet for flex, siden Outlook ikke
+// har noe forhold til moderne layout.
+function header(options: EmailOptions): string {
+  const siteUrl = escapeHtml(options.siteUrl);
+  const logoUrl = escapeHtml(
+    options.logoUrl ?? `${options.siteUrl.replace(/\/$/, "")}/logo-email.png`,
+  );
+  const siteName = escapeHtml(options.siteName);
+
+  return `
+    <a href="${siteUrl}" style="text-decoration:none;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
+        <tr>
+          <td style="padding-right:11px;vertical-align:middle;">
+            <img src="${logoUrl}" width="38" height="38" alt="${siteName}" style="display:block;width:38px;height:auto;border:0;outline:none;">
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="color:${COLORS.brand};font-size:17px;font-weight:600;letter-spacing:0.01em;">${siteName}</span>
+          </td>
+        </tr>
+      </table>
+    </a>`;
 }
 
 export function renderEmail(options: EmailOptions): string {
@@ -141,14 +204,14 @@ export function renderEmail(options: EmailOptions): string {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.canvas};padding:32px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid ${COLORS.border};border-radius:18px;overflow:hidden;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:700px;background:#ffffff;border:1px solid ${COLORS.border};border-radius:18px;overflow:hidden;">
             <tr>
-              <td style="padding:22px 28px;background:${COLORS.leaf};">
-                <a href="${escapeHtml(options.siteUrl)}" style="color:#ffffff;font-size:18px;font-weight:700;text-decoration:none;letter-spacing:-0.01em;">${escapeHtml(options.siteName)}</a>
+              <td align="center" style="padding:36px 36px 0;text-align:center;">
+                ${header(options)}
               </td>
             </tr>
             <tr>
-              <td style="padding:28px;">
+              <td style="padding:36px;">
                 ${
                   badge && options.badge
                     ? `<span style="display:inline-block;margin:0 0 14px;padding:5px 12px;border-radius:999px;background:${badge.background};color:${badge.color};font-size:12px;font-weight:600;">${escapeHtml(options.badge.label)}</span>`
@@ -171,9 +234,8 @@ export function renderEmail(options: EmailOptions): string {
               </td>
             </tr>
             <tr>
-              <td style="padding:20px 28px;border-top:1px solid ${COLORS.border};background:${COLORS.canvas};">
-                <a href="${escapeHtml(options.siteUrl)}" style="color:${COLORS.leafDark};font-size:13px;font-weight:600;text-decoration:none;">${escapeHtml(options.siteUrl.replace(/^https?:\/\//, ""))}</a>
-                ${options.contact ? contactBlock(options.contact) : ""}
+              <td style="padding:0 36px 32px;">
+                ${footer(options)}
               </td>
             </tr>
           </table>
