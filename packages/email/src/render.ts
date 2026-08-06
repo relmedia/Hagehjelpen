@@ -160,15 +160,20 @@ function header(options: EmailOptions): string {
     <a href="${siteUrl}" style="text-decoration:none;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
         <tr>
-          <td style="padding-right:11px;vertical-align:middle;">
-            <img src="${logoUrl}" width="38" height="38" alt="${siteName}" style="display:block;width:38px;height:auto;border:0;outline:none;">
+          <td style="padding-right:12px;vertical-align:middle;">
+            <img src="${logoUrl}" width="48" height="48" alt="${siteName}" style="display:block;width:48px;height:auto;border:0;outline:none;">
           </td>
           <td style="vertical-align:middle;">
-            <span style="color:${COLORS.brand};font-size:17px;font-weight:600;letter-spacing:0.01em;">${siteName}</span>
+            <span style="color:${COLORS.brand};font-size:19px;font-weight:600;letter-spacing:0.01em;">${siteName}</span>
           </td>
         </tr>
       </table>
-    </a>`;
+    </a>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;">
+      <tr>
+        <td style="height:1px;background:${COLORS.hairline};font-size:0;line-height:0;">&nbsp;</td>
+      </tr>
+    </table>`;
 }
 
 export function renderEmail(options: EmailOptions): string {
@@ -211,7 +216,7 @@ export function renderEmail(options: EmailOptions): string {
               </td>
             </tr>
             <tr>
-              <td style="padding:36px;">
+              <td style="padding:32px 36px 36px;">
                 ${
                   badge && options.badge
                     ? `<span style="display:inline-block;margin:0 0 14px;padding:5px 12px;border-radius:999px;background:${badge.background};color:${badge.color};font-size:12px;font-weight:600;">${escapeHtml(options.badge.label)}</span>`
@@ -234,7 +239,7 @@ export function renderEmail(options: EmailOptions): string {
               </td>
             </tr>
             <tr>
-              <td style="padding:0 36px 32px;">
+              <td style="padding:0 36px 36px;">
                 ${footer(options)}
               </td>
             </tr>
