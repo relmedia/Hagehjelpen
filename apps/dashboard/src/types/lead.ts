@@ -42,12 +42,7 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
 export const CLOSED_LEAD_STATUSES: LeadStatus[] = ["vunnet", "tapt"];
 
 // Shared with the website so both ends label the form values identically.
-export {
-  LAWN_SIZE_LABELS,
-  LEAD_SOURCE_LABELS,
-  MOWER_LABELS,
-  SERVICE_LABELS,
-} from "@repo/email/labels";
+export { LAWN_SIZE_LABELS, LEAD_SOURCE_LABELS, MOWER_LABELS, SERVICE_LABELS };
 
 export function serviceLabel(value: string | null): string {
   if (!value) return "—";
