@@ -129,6 +129,17 @@ html.js .gsap-reveal {
   cursor: pointer;
 }
 
+/* Karusellen med kundeomtaler bruker native scroll for swipe/drag, men uten den
+   synlige rullefeltet – piltastene og kortene som stikker ut i kanten er nok
+   til å vise at det finnes mer å bla gjennom. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Krediteringen skal være lesbar over flyfoto uten å ta oppmerksomhet. */
 .lawn-measure-map.leaflet-container .leaflet-control-attribution {
   margin: 0 0.625rem 0.625rem 0;

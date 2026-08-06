@@ -36,6 +36,54 @@ const FALLBACK_TESTIMONIALS: Testimonial[] = [
     service: "Feilsøking",
     rating: 5,
   },
+  {
+    quote:
+      "Hagen vår har flere nivåer og mange blomsterbed. De satte opp en kabelfri løsning med virtuelle grenser, og viste oss hvordan vi selv kan justere dem i appen etterpå.",
+    name: "Kari-Anne S.",
+    location: "Randaberg",
+    service: "Installasjon, 1800 m²",
+    rating: 5,
+  },
+  {
+    quote:
+      "Befaringen var helt uforpliktende, akkurat som lovet. Vi fikk et skriftlig tilbud samme uke, med alt spesifisert – ingen overraskelser da regningen kom.",
+    name: "Per Olav T.",
+    location: "Bryne",
+    service: "Befaring",
+    rating: 5,
+  },
+  {
+    quote:
+      "Bestilte årlig service etter to sesonger. De byttet kniver, rengjorde sensorene og justerte ladestasjonen. Klipperen går som ny igjen.",
+    name: "Hilde M.",
+    location: "Stavanger",
+    service: "Service, årlig sjekk",
+    rating: 5,
+  },
+  {
+    quote:
+      "Installasjonen tok litt lengre tid enn avtalt fordi hagen var mer kronglete enn ventet, men de sto på til alt satt som det skulle og ga oss rabatt for ventetiden.",
+    name: "Øyvind L.",
+    location: "Sola",
+    service: "Installasjon, 450 m²",
+    rating: 4,
+  },
+  {
+    quote:
+      "Stor hage med mange hindre og to soner som måtte kobles sammen. Grundig planlegging på befaringen gjorde at selve installasjonen gikk overraskende raskt.",
+    name: "Anne Grete F.",
+    location: "Kvernaland",
+    service: "Installasjon, 2400 m²",
+    rating: 5,
+  },
+  {
+    quote:
+      "Klipperen mistet kontakten med ladestasjonen i samme hjørne av plenen hver gang. De fant en løs kontakt i kabelen på under en halvtime og fikset det på stedet.",
+    name: "Jon Arne D.",
+    location: "Randaberg",
+    service: "Feilsøking",
+    rating: 5,
+  },
 ];
 
 type TestimonialRow = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { Testimonial } from "@/lib/testimonials";
 
@@ -26,8 +26,54 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+function ArrowIcon({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {direction === "left" ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
+    </svg>
+  );
+}
+
+const arrowButtonClass =
+  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-leaf-200 bg-white text-ink-soft shadow-sm transition-colors hover:border-leaf-400 hover:text-ink disabled:cursor-not-allowed disabled:opacity-30";
+
 export function Testimonials({ items }: { items: Testimonial[] }) {
   const sectionRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    // 8px slingringsmonn så avrunding ikke låser en knapp som ser ferdig ut.
+    setCanScrollLeft(track.scrollLeft > 8);
+    setCanScrollRight(track.scrollLeft + track.clientWidth < track.scrollWidth - 8);
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    window.addEventListener("resize", updateScrollState);
+    return () => window.removeEventListener("resize", updateScrollState);
+  }, [updateScrollState, items.length]);
+
+  function scrollByCard(direction: 1 | -1) {
+    const track = trackRef.current;
+    if (!track) return;
+    const card = track.querySelector<HTMLElement>(".testimonial-card");
+    const amount = card ? card.offsetWidth + 24 : track.clientWidth * 0.85;
+    track.scrollBy({ left: direction * amount, behavior: "smooth" });
+  }
 
   useGSAP(
     () => {
@@ -71,24 +117,54 @@ export function Testimonials({ items }: { items: Testimonial[] }) {
       className="bg-gradient-to-b from-cream to-leaf-50 py-24 sm:py-32"
     >
       <div className="mx-auto max-w-6xl px-5">
-        <div className="testimonial-heading gsap-reveal mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-leaf-600">
-            Kundeomtaler
-          </p>
-          <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-ink sm:text-4xl">
-            Hva kundene våre sier
-          </h2>
-          <p className="mt-4 text-ink-soft">
-            Vi jobber i hager på Nord-Jæren hver uke. Her er noen av
-            tilbakemeldingene vi får.
-          </p>
+        <div className="testimonial-heading gsap-reveal flex flex-col items-center gap-6 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-leaf-600">
+              Kundeomtaler
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-ink sm:text-4xl">
+              Hva kundene våre sier
+            </h2>
+            <p className="mt-4 text-ink-soft">
+              Vi jobber i hager på Nord-Jæren hver uke. Her er noen av
+              tilbakemeldingene vi får.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => scrollByCard(-1)}
+              disabled={!canScrollLeft}
+              aria-label="Forrige omtaler"
+              className={arrowButtonClass}
+            >
+              <ArrowIcon direction="left" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByCard(1)}
+              disabled={!canScrollRight}
+              aria-label="Flere omtaler"
+              className={arrowButtonClass}
+            >
+              <ArrowIcon direction="right" />
+            </button>
+          </div>
         </div>
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-3">
+        <div
+          ref={trackRef}
+          onScroll={updateScrollState}
+          role="group"
+          aria-label="Kundeomtaler – bla med piltastene eller sveip"
+          tabIndex={0}
+          className="no-scrollbar mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-2 outline-none"
+        >
           {items.map((item, index) => (
             <figure
               key={`${item.name}-${index}`}
-              className="testimonial-card gsap-reveal flex flex-col rounded-3xl border border-leaf-100 bg-white p-8 shadow-sm"
+              className="testimonial-card gsap-reveal flex w-[82%] shrink-0 snap-start flex-col rounded-3xl border border-leaf-100 bg-white p-8 shadow-sm sm:w-[46%] lg:w-[31%]"
             >
               <Stars rating={item.rating} />
               <blockquote className="mt-5 flex-1 text-sm leading-relaxed text-ink-soft">
