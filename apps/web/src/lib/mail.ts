@@ -73,6 +73,14 @@ export async function getMailContext(): Promise<{
   const adminTo =
     clean(email?.lead_admin_email) ?? clean(process.env.CONTACT_TO) ?? "post@hagehjelpen.no";
 
+  if (!apiKey || !from) {
+    console.warn(
+      "[mail] Fant ikke Resend-oppsett, så skjemaet faller tilbake til mailto." +
+        ` Mangler: ${[!apiKey && "API-nøkkel", !from && "avsender"].filter(Boolean).join(" og ")}.` +
+        ` Kilde: ${supabase ? "dashbordet (email_settings)" : "miljøvariabler – SUPABASE_SECRET_KEY er ikke satt"}.`,
+    );
+  }
+
   return {
     config: apiKey && from ? { apiKey, from, adminTo } : null,
     brand: {

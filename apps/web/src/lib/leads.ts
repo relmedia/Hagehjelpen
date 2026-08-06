@@ -19,7 +19,12 @@ export type NewLead = {
  *  bare og lar kallet returnere false. */
 export async function saveLead(lead: NewLead): Promise<boolean> {
   const supabase = getSupabaseAdminClient();
-  if (!supabase) return false;
+  if (!supabase) {
+    console.warn(
+      "[leads] SUPABASE_SECRET_KEY mangler, så henvendelsen havnet ikke i dashbordet.",
+    );
+    return false;
+  }
 
   const { error } = await supabase.from("leads").insert({
     name: lead.name,

@@ -11,6 +11,7 @@ import {
 
 import { saveLead } from "@/lib/leads";
 import { getMailContext, type MailAttachment, sendEmail } from "@/lib/mail";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export type ContactPayload = {
   name: string;
@@ -21,6 +22,8 @@ export type ContactPayload = {
   mower: string;
   message: string;
 };
+
+const TURNSTILE_FIELD = "turnstileToken";
 
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -54,15 +57,18 @@ function buildMailtoBody(data: ContactPayload, imageNote: string) {
 
 async function readRequest(
   request: Request,
-): Promise<{ fields: Partial<ContactPayload>; images: File[] }> {
+): Promise<{ fields: Partial<ContactPayload>; images: File[]; turnstileToken: string }> {
   const contentType = request.headers.get("content-type") ?? "";
 
   if (!contentType.includes("multipart/form-data")) {
-    return { fields: await request.json(), images: [] };
+    const body = (await request.json()) as Partial<ContactPayload> & {
+      [TURNSTILE_FIELD]?: string;
+    };
+    return { fields: body, images: [], turnstileToken: body[TURNSTILE_FIELD] ?? "" };
   }
 
   const form = await request.formData();
-  const read = (key: keyof ContactPayload) => {
+  const read = (key: keyof ContactPayload | typeof TURNSTILE_FIELD) => {
     const value = form.get(key);
     return typeof value === "string" ? value : undefined;
   };
@@ -84,6 +90,7 @@ async function readRequest(
       message: read("message"),
     },
     images,
+    turnstileToken: read(TURNSTILE_FIELD) ?? "",
   };
 }
 
@@ -99,9 +106,10 @@ async function toAttachments(images: File[]): Promise<MailAttachment[]> {
 export async function POST(request: Request) {
   let fields: Partial<ContactPayload>;
   let images: File[];
+  let turnstileToken: string;
 
   try {
-    ({ fields, images } = await readRequest(request));
+    ({ fields, images, turnstileToken } = await readRequest(request));
   } catch {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
@@ -140,6 +148,24 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Hvert bilde må være mindre enn 5 MB." },
       { status: 413 },
+    );
+  }
+
+  // Robotsjekken kjøres før vi lagrer eller sender noe som helst.
+  const check = await verifyTurnstile(
+    turnstileToken,
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
+  );
+
+  if (!check.ok) {
+    return NextResponse.json(
+      {
+        error:
+          check.reason === "unavailable"
+            ? "Robotsjekken svarte ikke. Prøv igjen om litt, eller ring oss."
+            : "Robotsjekken feilet. Last siden på nytt og prøv igjen.",
+      },
+      { status: check.reason === "unavailable" ? 503 : 400 },
     );
   }
 

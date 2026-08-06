@@ -1,6 +1,7 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { Turnstile } from "@/components/Turnstile";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,9 @@ const MOWERS = [
 
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+// Uten nøkkel vises ingen robotsjekk, og serveren hopper over verifiseringen.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 type FormState = {
   name: string;
@@ -96,6 +100,10 @@ export function ContactForm() {
     "idle",
   );
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Tokenet kan bare brukes én gang, så widgeten monteres på nytt etter hvert
+  // forsøk ved å bytte nøkkel.
+  const [turnstileRound, setTurnstileRound] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Skal vi bare på befaring, finner vi ut av plen og modell når vi er der.
@@ -164,6 +172,15 @@ export function ContactForm() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function resetTurnstile() {
+    setTurnstileToken(null);
+    setTurnstileRound((round) => round + 1);
+  }
+
+  const handleTurnstileError = useCallback(() => {
+    setError("Robotsjekken kunne ikke lastes. Last siden på nytt, eller ring oss.");
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("loading");
@@ -175,9 +192,16 @@ export function ContactForm() {
       return;
     }
 
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError("Vent til robotsjekken er ferdig, og prøv igjen.");
+      setStatus("error");
+      return;
+    }
+
     const payload = new FormData();
     Object.entries(form).forEach(([key, value]) => payload.append(key, value));
     files.forEach((file) => payload.append("images", file));
+    if (turnstileToken) payload.append("turnstileToken", turnstileToken);
 
     try {
       const res = await fetch("/api/contact", { method: "POST", body: payload });
@@ -190,6 +214,7 @@ export function ContactForm() {
       if (!res.ok) {
         setError(data.error ?? "Noe gikk galt. Prøv igjen.");
         setStatus("error");
+        resetTurnstile();
         return;
       }
 
@@ -204,6 +229,7 @@ export function ContactForm() {
     } catch {
       setError("Kunne ikke sende skjemaet. Sjekk nettverket og prøv igjen.");
       setStatus("error");
+      resetTurnstile();
     }
   }
 
@@ -465,6 +491,16 @@ export function ContactForm() {
           </ul>
         )}
       </div>
+
+      {TURNSTILE_SITE_KEY && (
+        <Turnstile
+          key={turnstileRound}
+          siteKey={TURNSTILE_SITE_KEY}
+          onToken={setTurnstileToken}
+          onError={handleTurnstileError}
+          className="min-h-16.25"
+        />
+      )}
 
       {error && (
         <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
