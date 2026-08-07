@@ -5,8 +5,13 @@ import { useEffect, useRef } from "react";
 const SCRIPT_ID = "cf-turnstile";
 const SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
+/** Merkelappen Cloudflare bruker for å se at integrasjonen er satt opp med
+ *  Spin. Den følger med til siteverify og er ren statistikk på kontonivå. */
+const ACTION = "turnstile-spin-v2";
+
 type TurnstileOptions = {
   sitekey: string;
+  action?: string;
   theme?: "auto" | "light" | "dark";
   size?: "normal" | "flexible" | "compact";
   callback?: (token: string) => void;
@@ -80,6 +85,7 @@ export function Turnstile({
 
         widgetId = window.turnstile.render(holder.current, {
           sitekey: siteKey,
+          action: ACTION,
           theme: "light",
           size: "flexible",
           callback: (token) => handlers.current.onToken(token),

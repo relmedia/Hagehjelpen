@@ -12,18 +12,37 @@ export type TurnstileResult =
   | { ok: false; reason: "missing-token" | "rejected" | "unavailable" };
 
 export function isTurnstileEnabled(): boolean {
-  return Boolean(process.env.TURNSTILE_SECRET_KEY?.trim());
+  return Boolean(process.env.TURNSTILE_SECRET?.trim());
 }
 
-/** Sjekker tokenet fra widgeten mot Cloudflare. Uten hemmelig nøkkel er
- *  robotsjekken slått av, slik at skjemaet virker i lokale miljøer og før
- *  nøklene er satt i produksjon. */
+/** Sjekker tokenet fra widgeten mot Cloudflare. Er ingen av nøklene satt, er
+ *  robotsjekken slått av med vilje, slik at skjemaene virker lokalt og før
+ *  nøklene er lagt inn. */
 export async function verifyTurnstile(
   token: string,
   remoteIp?: string | null,
 ): Promise<TurnstileResult> {
-  const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
-  if (!secret) return { ok: true };
+  const secret = process.env.TURNSTILE_SECRET?.trim();
+
+  if (!secret) {
+    // Er sitekeyen satt, vises widgeten til besøkende og de løser den – men
+    // uten hemmelig nøkkel blir tokenet aldri sjekket, og skjemaet står i
+    // praksis åpent for roboter uten at det synes noe sted. Da avviser vi
+    // heller innsendingen, slik at feilen blir oppdaget med en gang.
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()) {
+      console.error(
+        "[turnstile] TURNSTILE_SECRET mangler, men sitekeyen er satt." +
+          " Innsendingen avvises fordi tokenet ikke kan verifiseres.",
+      );
+      return { ok: false, reason: "unavailable" };
+    }
+
+    if (process.env.NODE_ENV === "production") {
+      console.error("[turnstile] Robotsjekken er slått av i produksjon: ingen nøkler er satt.");
+    }
+
+    return { ok: true };
+  }
 
   if (!token) return { ok: false, reason: "missing-token" };
 

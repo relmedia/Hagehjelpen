@@ -95,13 +95,25 @@ viser seksjonen telefonnummer og kontaktskjema i stedet for kalenderen.
 ## Robotsjekk
 
 Kontaktskjemaet og bestillingen beskyttes av Cloudflare Turnstile. Nøklene ligger i
-`apps/web/.env.local` som `NEXT_PUBLIC_TURNSTILE_SITE_KEY` og
-`TURNSTILE_SECRET_KEY`, og må også settes i Vercel for produksjon. Husk å legge
-inn domenet under Turnstile i Cloudflare-dashbordet.
+`apps/web/.env.local` som `NEXT_PUBLIC_TURNSTILE_SITE_KEY` og `TURNSTILE_SECRET`,
+og må også settes i Vercel for produksjon.
 
-Begge nøklene er valgfrie: uten sitekey vises ingen widget, og uten hemmelig
-nøkkel hopper serveren over verifiseringen. Da oppfører skjemaet seg som før.
-Lokalt brukes Cloudflares testnøkler, som alltid godkjenner.
+Domenelisten på widgeten må inneholde alle vertsnavnene den skal virke på –
+`hagehjelpen.no`, `www.hagehjelpen.no`, og `localhost` og `127.0.0.1` for lokal
+utvikling. Mangler et av dem, nekter widgeten å laste med feilkode 110200, og
+da blir det aldri noe token å verifisere.
+
+Nøklene hører sammen. Er ingen av dem satt, er robotsjekken av med vilje og
+skjemaene virker som før. Er bare sitekeyen satt, avvises innsendinger: widgeten
+vises til besøkende, men serveren kan ikke sjekke tokenet, og da ville skjemaet
+stått åpent for roboter uten at det syntes noe sted. Lokalt kan Cloudflares
+testnøkler brukes – de godkjenner alt og krever ingen domeneliste.
+
+Verifiseringen ligger i `src/lib/turnstile.ts` og kalles fra `/api/contact` og
+`/api/booking` før noe lagres eller sendes. Vil du sjekke at nøkkelen stemmer,
+kan du kalle siteverify med et tulletoken: svaret
+`invalid-input-response` betyr at nøkkelen er riktig, mens
+`invalid-input-secret` betyr at den er feil.
 
 ## Samtykke til informasjonskapsler
 
