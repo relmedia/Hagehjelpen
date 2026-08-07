@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ScrollTrigger, useGSAP } from "@/lib/gsap";
 
@@ -26,15 +28,20 @@ const MOBILE_NAV = [
   ...MORE_NAV,
 ] as const;
 
-export function Header() {
+/** `solid` brukes på undersider uten hero: der finnes det ikke noe mørkt bilde
+ *  å ligge oppå, så menyen må være hvit fra første piksel. */
+export function Header({ solid = false }: { readonly solid?: boolean }) {
   const headerRef = useRef<HTMLElement>(null);
+  const onFrontPage = usePathname() === "/";
   const moreRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(solid);
 
   useGSAP(
     () => {
+      if (solid) return;
+
       ScrollTrigger.create({
         start: () => ScrollTrigger.getById("hero-pin")?.end ?? window.innerHeight,
         invalidateOnRefresh: true,
@@ -61,6 +68,9 @@ export function Header() {
     ? "text-ink-soft hover:text-leaf-600"
     : "text-white/90 hover:text-leaf-300";
 
+  // Seksjonene ligger på forsiden, så undersider må lenke seg tilbake dit.
+  const to = (hash: string) => (onFrontPage ? hash : `/${hash}`);
+
   return (
     <header
       ref={headerRef}
@@ -80,19 +90,22 @@ export function Header() {
             scrolled || menuOpen ? "h-16" : "h-24"
           }`}
         >
-          <a
+          <Link
             href="/"
             onClick={(event) => {
-              event.preventDefault();
               setMenuOpen(false);
               setMoreOpen(false);
+              if (!onFrontPage) return;
+
+              // På forsiden ruller vi til toppen i stedet for å laste på nytt.
               // Uten dette blir hashen fra forrige seksjon liggende i URL-en,
               // og nettleseren tror toppen hører til den seksjonen ved reload.
+              event.preventDefault();
               window.history.replaceState(null, "", window.location.pathname);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             className="flex shrink-0 items-center gap-3"
-            aria-label="Til toppen"
+            aria-label={onFrontPage ? "Til toppen" : "Til forsiden"}
           >
             <Image
               src={scrolled || menuOpen ? "/logo.svg" : "/logo_header.svg"}
@@ -124,7 +137,7 @@ export function Header() {
                 Plen og hage tjenester
               </span>
             </span>
-          </a>
+          </Link>
 
           <nav
             className="hidden items-center gap-4 lg:gap-5 md:flex"
@@ -133,7 +146,7 @@ export function Header() {
             {PRIMARY_NAV.map((link) => (
               <a
                 key={link.href}
-                href={link.href}
+                href={to(link.href)}
                 className={`whitespace-nowrap text-sm font-medium transition-colors ${linkClass}`}
               >
                 {link.label}
@@ -177,7 +190,7 @@ export function Header() {
                     {MORE_NAV.map((link) => (
                       <a
                         key={link.href}
-                        href={link.href}
+                        href={to(link.href)}
                         role="menuitem"
                         onClick={() => setMoreOpen(false)}
                         className="block px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-leaf-50 hover:text-leaf-700"
@@ -191,7 +204,7 @@ export function Header() {
             </div>
 
             <a
-              href="#kontakt"
+              href={to("#kontakt")}
               className="ml-1 whitespace-nowrap rounded-full bg-leaf-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-leaf-500/30 transition-all hover:bg-leaf-600 hover:shadow-leaf-600/30"
             >
               Få et tilbud
@@ -236,7 +249,7 @@ export function Header() {
               {MOBILE_NAV.map((link) => (
                 <li key={link.href}>
                   <a
-                    href={link.href}
+                    href={to(link.href)}
                     onClick={() => setMenuOpen(false)}
                     className="block rounded-lg px-3 py-2.5 font-medium text-ink-soft hover:bg-leaf-50 hover:text-leaf-700"
                   >
@@ -246,7 +259,7 @@ export function Header() {
               ))}
               <li className="mt-2">
                 <a
-                  href="#kontakt"
+                  href={to("#kontakt")}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-full bg-leaf-500 px-5 py-3 text-center font-semibold text-white"
                 >

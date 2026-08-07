@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { trackAction, trackEngaged, trackSection, trackView } from "@/lib/track";
+import { useConsent } from "@/lib/use-consent";
 
 /** Sekunder på siden før besøket regnes som engasjert. */
 const ENGAGED_AFTER_MS = 10_000;
@@ -12,9 +13,11 @@ const ENGAGED_AFTER_MS = 10_000;
  *  langt ned folk faktisk kommer. */
 export function Analytics() {
   const pathname = usePathname();
+  // Måling starter i det samtykket gis, og stopper i det det trekkes tilbake.
+  const statistikk = useConsent()?.statistikk === true;
 
   useEffect(() => {
-    if (!pathname) return;
+    if (!pathname || !statistikk) return;
 
     trackView(pathname);
 
@@ -55,7 +58,7 @@ export function Analytics() {
       observer.disconnect();
       document.removeEventListener("click", onClick);
     };
-  }, [pathname]);
+  }, [pathname, statistikk]);
 
   return null;
 }

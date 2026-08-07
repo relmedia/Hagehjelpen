@@ -75,15 +75,30 @@ export async function getPastInspections(): Promise<Inspection[]> {
   return (data as Inspection[] | null) ?? [];
 }
 
-// Today and later, oldest first — the days that still affect the website.
+// Today and later, oldest first — the days that still affect the website. The
+// booked times come along so the overview separates "open" from "still free".
 export async function getAvailabilityDays(): Promise<AvailabilityDay[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("availability_days")
-    .select("id, date, is_closed, slots")
-    .gte("date", todayInOslo())
-    .order("date", { ascending: true });
-  return (data as AvailabilityDay[] | null) ?? [];
+  const today = todayInOslo();
+
+  const [days, taken] = await Promise.all([
+    supabase
+      .from("availability_days")
+      .select("id, date, is_closed, slots")
+      .gte("date", today)
+      .order("date", { ascending: true }),
+    supabase.from("inspections").select("date, time").gte("date", today).neq("status", "cancelled"),
+  ]);
+
+  const bookedByDate = new Map<string, string[]>();
+  for (const row of (taken.data as { date: string; time: string }[] | null) ?? []) {
+    bookedByDate.set(row.date, [...(bookedByDate.get(row.date) ?? []), row.time]);
+  }
+
+  return ((days.data as AvailabilityDay[] | null) ?? []).map((day) => ({
+    ...day,
+    booked: bookedByDate.get(day.date) ?? [],
+  }));
 }
 
 // Everything before today, newest first.

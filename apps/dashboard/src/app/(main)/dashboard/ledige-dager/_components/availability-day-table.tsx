@@ -28,6 +28,31 @@ const STATUS_LABELS: Record<StatusFilter, string> = {
   closed: "Stengte",
 };
 
+function freeSlots(day: AvailabilityDay): string[] {
+  const booked = new Set(day.booked ?? []);
+  return day.slots.filter((slot) => !booked.has(slot));
+}
+
+// Bestilte tider står igjen i listen, men overstrøket, slik at det er tydelig
+// hva som er åpnet og hva som faktisk er igjen.
+function SlotList({ day }: { readonly day: AvailabilityDay }) {
+  const booked = new Set(day.booked ?? []);
+
+  return (
+    <span className="flex flex-wrap gap-x-2 gap-y-1">
+      {day.slots.map((slot) => (
+        <span
+          key={slot}
+          title={booked.has(slot) ? "Bestilt" : "Ledig"}
+          className={cn(booked.has(slot) && "text-muted-foreground/60 line-through")}
+        >
+          {slot}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function DateRangeFilter({
   range,
   onChange,
@@ -116,7 +141,7 @@ export function AvailabilityDayTable({
       if (from && (day.date < from || (to && day.date > to))) return false;
       if (status === "open" && day.is_closed) return false;
       if (status === "closed" && !day.is_closed) return false;
-      if (slot !== "all" && !day.slots.includes(slot)) return false;
+      if (slot !== "all" && !freeSlots(day).includes(slot)) return false;
       return true;
     });
   }, [days, range, status, slot]);
@@ -192,11 +217,11 @@ export function AvailabilityDayTable({
               <TableRow key={day.id}>
                 <TableCell className="font-medium">{formatAvailabilityDate(day.date)}</TableCell>
                 <TableCell className="text-muted-foreground hidden md:table-cell">
-                  {day.is_closed ? "—" : day.slots.join(", ")}
+                  {day.is_closed ? "—" : <SlotList day={day} />}
                 </TableCell>
                 <TableCell className="text-center">
                   <Badge variant={day.is_closed ? "outline" : "default"}>
-                    {day.is_closed ? "Stengt" : `${day.slots.length} tider`}
+                    {day.is_closed ? "Stengt" : `${freeSlots(day).length} av ${day.slots.length} ledig`}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">

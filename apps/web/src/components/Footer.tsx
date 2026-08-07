@@ -1,4 +1,20 @@
 import Image from "next/image";
+import Link from "next/link";
+import { ConsentSettingsButton } from "@/components/ConsentSettingsButton";
+
+// Bunnteksten står også på undersider, så snarveiene må peke på forsiden.
+const SNARVEIER = [
+  { href: "/#fordeler", navn: "Fordeler" },
+  { href: "/#slik-fungerer-det", navn: "Slik fungerer det" },
+  { href: "/#installasjon", navn: "Installasjon og priser" },
+  { href: "/#kalkulator", navn: "Prisberegner" },
+  { href: "/#velg-klipper", navn: "Velg riktig klipper" },
+  { href: "/#huskeliste", navn: "Huskeliste før montering" },
+  { href: "/#feilsoking", navn: "Feilsøking" },
+  { href: "/#faq", navn: "Spørsmål og svar" },
+  { href: "/#befaring", navn: "Bestill befaring" },
+  { href: "/#kontakt", navn: "Kontakt" },
+] as const;
 
 export function Footer() {
   return (
@@ -21,59 +37,13 @@ export function Footer() {
         <div>
           <h3 className="font-display font-semibold text-white">Snarveier</h3>
           <ul className="mt-4 space-y-2.5 text-sm">
-            <li>
-              <a href="#fordeler" className="transition-colors hover:text-leaf-300">
-                Fordeler
-              </a>
-            </li>
-            <li>
-              <a
-                href="#slik-fungerer-det"
-                className="transition-colors hover:text-leaf-300"
-              >
-                Slik fungerer det
-              </a>
-            </li>
-            <li>
-              <a href="#installasjon" className="transition-colors hover:text-leaf-300">
-                Installasjon og priser
-              </a>
-            </li>
-            <li>
-              <a href="#kalkulator" className="transition-colors hover:text-leaf-300">
-                Prisberegner
-              </a>
-            </li>
-            <li>
-              <a href="#velg-klipper" className="transition-colors hover:text-leaf-300">
-                Velg riktig klipper
-              </a>
-            </li>
-            <li>
-              <a href="#huskeliste" className="transition-colors hover:text-leaf-300">
-                Huskeliste før montering
-              </a>
-            </li>
-            <li>
-              <a href="#feilsoking" className="transition-colors hover:text-leaf-300">
-                Feilsøking
-              </a>
-            </li>
-            <li>
-              <a href="#faq" className="transition-colors hover:text-leaf-300">
-                Spørsmål og svar
-              </a>
-            </li>
-            <li>
-              <a href="#befaring" className="transition-colors hover:text-leaf-300">
-                Bestill befaring
-              </a>
-            </li>
-            <li>
-              <a href="#kontakt" className="transition-colors hover:text-leaf-300">
-                Kontakt
-              </a>
-            </li>
+            {SNARVEIER.map((snarvei) => (
+              <li key={snarvei.href}>
+                <a href={snarvei.href} className="transition-colors hover:text-leaf-300">
+                  {snarvei.navn}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -108,9 +78,13 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-6 text-xs text-white/50">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-6 text-xs text-white/50">
           <p>© {new Date().getFullYear()} Hagehjelpen. Alle rettigheter reservert.</p>
-          <p>Plen og hagetjenester</p>
+          <Link href="/personvern" className="transition-colors hover:text-leaf-300">
+            Personvern og informasjonskapsler
+          </Link>
+          <ConsentSettingsButton className="transition-colors hover:text-leaf-300" />
+          <p className="sm:ml-auto">Plen og hagetjenester</p>
         </div>
       </div>
     </footer>

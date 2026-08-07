@@ -67,9 +67,34 @@ Logoen i toppen av malene hentes fra `NEXT_PUBLIC_SITE_URL` + `/logo-email.png`,
 siden e-postklienter ikke viser SVG. Endrer du `public/logo.svg`, kjør
 `pnpm --filter web generate:email-logo` for å lage PNG-en på nytt.
 
+## Bestilling av befaring
+
+Besøkende bestiller selv i befaringsseksjonen på forsiden. Kalenderen viser bare
+dager administrator har åpnet under `/dashboard/ledige-dager`, minus timene som
+allerede er bestilt og de som ligger nærmere enn to timer fram i tid.
+
+Flyten går gjennom to ruter i `apps/web`:
+
+- `GET /api/booking/slots` regner ut de ledige tidene. Den leser
+  `availability_days` og `inspections` med tjenestenøkkelen, siden besøkende
+  ikke har lov til å se andres bestillinger.
+- `POST /api/booking` kjører robotsjekken, kontrollerer at tiden fortsatt er
+  ledig og lagrer raden i `inspections` med status `pending`. Kunden får en
+  kvittering med avbestillingslenke, og vi får et varsel.
+
+Bekreftelsen sendes først når noen trykker «Bekreft» under `/dashboard/befaringer`.
+Fram til da kan kunden avbestille selv på `/befaring/avbestill?token=…`.
+
+To som bestiller samtidig stoppes av en unik indeks i databasen. Kjør
+`apps/dashboard/supabase/booking.sql` én gang i Supabase for å legge den inn –
+uten den kan to kunder få samme tidspunkt.
+
+Bestillingen krever `SUPABASE_SECRET_KEY` i `apps/web/.env.local`. Mangler den,
+viser seksjonen telefonnummer og kontaktskjema i stedet for kalenderen.
+
 ## Robotsjekk
 
-Kontaktskjemaet beskyttes av Cloudflare Turnstile. Nøklene ligger i
+Kontaktskjemaet og bestillingen beskyttes av Cloudflare Turnstile. Nøklene ligger i
 `apps/web/.env.local` som `NEXT_PUBLIC_TURNSTILE_SITE_KEY` og
 `TURNSTILE_SECRET_KEY`, og må også settes i Vercel for produksjon. Husk å legge
 inn domenet under Turnstile i Cloudflare-dashbordet.
@@ -77,3 +102,27 @@ inn domenet under Turnstile i Cloudflare-dashbordet.
 Begge nøklene er valgfrie: uten sitekey vises ingen widget, og uten hemmelig
 nøkkel hopper serveren over verifiseringen. Da oppfører skjemaet seg som før.
 Lokalt brukes Cloudflares testnøkler, som alltid godkjenner.
+
+## Samtykke til informasjonskapsler
+
+Besøkende velger selv i banneret nederst på siden. Valget lagres i cookien
+`hh-samtykke` i tolv måneder, og kan endres når som helst fra bunnteksten eller
+personvernsiden på `/personvern`.
+
+Det finnes én valgfri kategori, avslått til besøkende sier ja:
+
+- **statistikk** – styrer trafikkmålingen i `src/lib/track.ts`. Uten samtykke
+  sendes ingenting til `/api/track`, og øktnøklene skrives ikke til
+  `sessionStorage`. Trekkes samtykket tilbake, slettes nøklene.
+
+Nødvendig lagring (robotsjekken, verdiene skjemaet tar med seg fra
+prisberegneren, og selve samtykket) kan ikke slås av og krever ikke samtykke.
+
+Ingenting fra tredjepart lastes inn av seg selv. Flyfotoene fra Norkart og
+adressesøket mot Kartverket hentes først når besøkende tar verktøyene i bruk.
+
+Legges det inn en tjeneste som skal sperres bak samtykke, utvid
+`ConsentCategories` i `src/lib/consent.ts`, les kategorien med `useConsent()`
+fra `src/lib/use-consent.ts` i komponenten, og oppdater tabellen på
+personvernsiden. Endres kategoriene, må `VERSION` i `src/lib/consent.ts` økes –
+da blir alle spurt på nytt.

@@ -18,7 +18,10 @@ export {
 
 export {
   buildInspectionConfirmedEmail,
+  buildInspectionNotificationEmail,
+  buildInspectionReceivedEmail,
   type InspectionEmailDetails,
+  type InspectionNotificationDetails,
 } from "./templates/inspection";
 
 export {

@@ -2,7 +2,12 @@
  * Trafikkmåling mot /api/track. Alt her er «best effort»: feiler et kall, skal
  * det aldri påvirke siden. Se apps/dashboard/supabase/analytics.sql for hva
  * tallene brukes til.
+ *
+ * Ingenting sendes eller lagres uten samtykke til statistikk. Hvert inngangs-
+ * punkt sjekker det først, slik at heller ikke øktnøklene havner i nettleseren.
  */
+
+import { hasConsent } from "@/lib/consent";
 
 const SESSION_KEY = "hh-session";
 
@@ -26,6 +31,10 @@ function firstTimeThisSession(key: string): boolean {
   return true;
 }
 
+function allowed(): boolean {
+  return typeof window !== "undefined" && hasConsent("statistikk");
+}
+
 function send(kind: Kind, path: string, label?: string) {
   const body = JSON.stringify({
     kind,
@@ -47,18 +56,18 @@ function send(kind: Kind, path: string, label?: string) {
 }
 
 export function trackView(path: string) {
-  if (typeof window === "undefined") return;
+  if (!allowed()) return;
   send("view", path);
 }
 
 export function trackEngaged(path: string) {
-  if (typeof window === "undefined") return;
+  if (!allowed()) return;
   if (!firstTimeThisSession("engaged")) return;
   send("engaged", path);
 }
 
 export function trackSection(path: string, section: string) {
-  if (typeof window === "undefined") return;
+  if (!allowed()) return;
   if (!firstTimeThisSession(`section:${section}`)) return;
   send("section", path, section);
 }
@@ -69,7 +78,7 @@ export function trackSection(path: string, section: string) {
  * API-et.
  */
 export function trackAction(action: string) {
-  if (typeof window === "undefined") return;
+  if (!allowed()) return;
   if (!firstTimeThisSession(`action:${action}`)) return;
   send("action", window.location.pathname, action);
 }

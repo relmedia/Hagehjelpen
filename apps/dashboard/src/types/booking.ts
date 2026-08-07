@@ -28,6 +28,9 @@ export type AvailabilityDay = {
   date: string;
   is_closed: boolean;
   slots: string[];
+  /** Tidene som allerede er bestilt fra nettsiden. Ligger ikke i tabellen, men
+   *  hentes sammen med dagen så oversikten viser hva som faktisk er ledig. */
+  booked?: string[];
 };
 
 export const BOOKING_TIME_SLOTS = [

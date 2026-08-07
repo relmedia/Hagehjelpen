@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit, Sarpanch } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
+import { CookieConsent } from "@/components/CookieConsent";
 import { HashScroll } from "@/components/HashScroll";
 import "./globals.css";
 
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body>
         {children}
         <HashScroll />
+        <CookieConsent />
         <Analytics />
       </body>
     </html>
